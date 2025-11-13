@@ -1,36 +1,54 @@
+// backend/api.js
 const express = require('express');
-const cors = require('cors'); // Importa o pacote cors
-// O caminho agora é relativo à raiz do projeto
-const supabase = require('../banco_de_dados/supabaseClient'); 
-// const logic = require('./logic'); // (Descomentar quando 'logic.js' tiver conteúdo)
-// const utils = require('./utils'); // (Descomentar quando 'utils.js' tiver conteúdo)
+const cors = require('cors');
+const path = require('path');
+require('dotenv').config();
+
+const { createClient } = require('@supabase/supabase-js');
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = 3000;
 
-app.use(express.json());
-app.use(cors()); // Habilita o CORS para todas as rotas
+app.use(cors());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Endpoint de teste da API
-app.get('/api/status', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date() });
+// Config do site
+app.get('/api/site-config', async (req, res) => {
+  const { data, error } = await supabase.from('site_config').select('*').single();
+  if (error && error.code !== 'PGRST116') return res.status(500).json({ error });
+  res.json(data || { site_name: "Lobianco Investimentos", phone: "(34) 99970-4808", main_color: "#0066CC", logo_url: "", whatsapp_link: "", instagram_link: "", facebook_link: "" });
 });
 
-// Exemplo de endpoint que usa o Supabase
-app.get('/api/items', async (req, res) => {
-    // Supondo que tenhamos uma tabela 'items'
-    const { data, error } = await supabase
-        .from('items')
-        .select('*');
-
-    if (error) {
-        console.error('Erro ao buscar items:', error);
-        return res.status(500).json({ error: 'Erro interno do servidor.' });
-    }
-
-    res.json(data);
+app.post('/api/site-config', async (req, res) => {
+  const { data, error } = await supabase.from('site_config').upsert(req.body).select().single();
+  if (error) return res.status(500).json({ error });
+  res.json({ success: true });
 });
 
-app.listen(PORT, () => {
-    console.log(`Servidor backend rodando na porta ${PORT}`);
+app.post('/api/upload', async (req, res) => {
+  const { file, filename, type } = req.body;
+  const base64Data = file.replace(/^data:.+;base64,/, '');
+  const buffer = Buffer.from(base64Data, 'base64');
+  const filePath = type === 'logo' ? `logo/${filename}` : `banners/${filename}`;
+
+  const { error: uploadError } = await supabase.storage.from('public_assets').upload(filePath, buffer, { upsert: true });
+  if (uploadError) return res.status(500).json({ error: uploadError.message });
+
+  const { data: { publicUrl } } = supabase.storage.from('public_assets').getPublicUrl(filePath);
+  res.json({ url: publicUrl });
 });
+
+// NOVA ROTA: pegar imóveis
+app.get('/api/imoveis', async (req, res) => {
+  const { data, error } = await supabase.from('items').select('*').order('created_at', { ascending: false });
+  if (error) return res.status(500).json({ error });
+  res.json(data || []);
+});
+
+app.use((req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/index.html'));
+});
+
+app.listen(PORT, () => console.log(`Servidor rodando → http://localhost:${PORT}`));
