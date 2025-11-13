@@ -1,0 +1,24 @@
+{
+  "name": "lobianco-investimentos",
+  "version": "1.0.0",
+  "main": "backend/api.js",
+  "scripts": {
+    "start": "node backend/api.js",
+    "dev": "serve frontend",
+    "dev:full": "concurrently \"npm start\" \"npm run dev\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.81.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "serve": "^14.2.5"
+  }
+}
