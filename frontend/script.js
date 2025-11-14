@@ -600,7 +600,7 @@ function renderizarImoveis(imoveis) {
 	        <div class="carousel-inner">
 	          ${slides.map((slide, slideIndex) => `
 	            <div class="carousel-item ${slideIndex === 0 ? 'active' : ''}">
-	              <div class="row row-cols-1 row-cols-md-3 g-4">
+	              <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 g-4">
 	                ${slide.map(imovel => {
 	                  const img = imovel.image_urls?.[0] || BANNER_PADRAO;
 	                  const whatsappLink = document.getElementById('cfg_whatsapp')?.value || 'https://wa.me/5534999704808';

@@ -144,16 +144,16 @@ body {
 .carousel-control-prev, .carousel-control-next {
   width: 5%;
   opacity: 1;
-  /* Ajuste para garantir que as setas fiquem visíveis */
-  color: var(--azul); 
+  color: var(--escuro); 
   top: 50%;
-  transform: translateY(-50%);
+  transform: translateY(-10%);
 }
 
 .carousel-control-prev-icon, .carousel-control-next-icon {
-  background-color: var(--azul);
+  background-color: var(--azul-escuro); /* Ou uma cor mais escura */
   border-radius: 50%;
   padding: 15px;
+  filter: brightness(0.7); /* Escurece o ícone */
 }
 
 /* Estilos para o Card de Imóvel */
