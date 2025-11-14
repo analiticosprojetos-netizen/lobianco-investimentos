@@ -589,8 +589,8 @@ function renderizarImoveis(imoveis) {
 	    const carouselId = `${s.id}-carousel`;
 	    
 	    // 2. Gerar o HTML do carrossel
-	    let carouselHTML = `
-	      <div id="${carouselId}" class="carousel slide" data-bs-ride="carousel" data-bs-interval="false">
+		    let carouselHTML = `
+		      <div id="${carouselId}" class="carousel slide" data-bs-ride="false" data-bs-interval="false">
 	        <div class="carousel-indicators">
 	          ${slides.map((_, index) => `
 	            <button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${index}" 
