@@ -57,8 +57,36 @@ function aplicarConfiguracoes(config) {
     console.log('🎨 Aplicando configurações:', config);
     
     // Nome do site
-    if (document.getElementById('siteName')) {
-      document.getElementById('siteName').textContent = config.site_name || "Lobianco";
+    const siteNameElement = document.getElementById('siteName');
+    if (siteNameElement) {
+      // 1. Ocultação do nome do site
+      if (!config.site_name || config.site_name.trim() === '') {
+        siteNameElement.style.display = 'none';
+      } else {
+        siteNameElement.style.display = 'inline';
+        siteNameElement.textContent = config.site_name;
+      }
+      
+      // 2. Aplica personalização de tamanho
+      if (config.site_name_size) {
+        siteNameElement.style.fontSize = config.site_name_size;
+      } else {
+        siteNameElement.style.fontSize = ''; // Remove se não houver
+      }
+      
+      // 3. Aplica alinhamento ao container do logo e nome
+      const navbarBrand = siteNameElement.closest('.navbar-brand');
+      if (navbarBrand) {
+        // O alinhamento é aplicado ao container flex (.navbar-brand)
+        // O logo e o nome do site são tratados como um grupo
+        if (config.site_name_align === 'center') {
+          navbarBrand.style.justifyContent = 'center';
+        } else if (config.site_name_align === 'right') {
+          navbarBrand.style.justifyContent = 'flex-end';
+        } else {
+          navbarBrand.style.justifyContent = 'flex-start'; // Padrão
+        }
+      }
     }
     
     // Logo
@@ -261,6 +289,10 @@ function inicializarCarouselForcadamente() {
     const logoWidth = document.getElementById('cfg_logoWidth')?.value || "60px";
     const logoHeight = document.getElementById('cfg_logoHeight')?.value || "60px";
     
+    // Novos campos de personalização do nome do site
+    const siteNameSize = document.getElementById('cfg_siteNameSize')?.value || "";
+    const siteNameAlign = document.getElementById('cfg_siteNameAlign')?.value || "";
+    
     const logoFile = document.getElementById('cfg_logo')?.files[0];
     const bannerFiles = document.getElementById('cfg_banners')?.files;
     
@@ -325,12 +357,15 @@ function inicializarCarouselForcadamente() {
       main_color: mainColor,
       secondary_color: secondaryColor,
       text_color: textColor,
-      
-      // Mídia
+            // Mídia
       logo_url: logoUrl,
       logo_width: logoWidth,
       logo_height: logoHeight,
       banner_images: bannerUrls,
+      
+      // Personalização do nome do site
+      site_name_size: siteNameSize,
+      site_name_align: siteNameAlign,
       
       // Contatos
       company_email: email,

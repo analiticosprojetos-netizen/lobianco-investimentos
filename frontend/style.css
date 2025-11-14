@@ -36,8 +36,14 @@ body {
 }
 
 .navbar-brand {
+  display: flex; /* Garante que é um container flex */
+  align-items: center; /* Alinha verticalmente logo e nome */
+  width: 100%; /* Ocupa o espaço disponível */
   font-weight: 700;
   color: var(--azul) !important;
+  /* Garante que o nome do site não force o layout */
+  white-space: normal;
+  word-wrap: break-word;
 }
 
 .nav-link {
@@ -311,6 +317,11 @@ html {
   .navbar .container {
     padding-left: 10px;
     padding-right: 10px;
+  }
+  
+  /* Ajuste para o nome do site em telas muito pequenas */
+  .navbar-brand #siteName {
+    font-size: 1.2rem !important; /* Reduz ainda mais o tamanho da fonte */
   }
 
   
