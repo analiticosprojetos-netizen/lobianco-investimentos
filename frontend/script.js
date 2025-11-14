@@ -191,13 +191,13 @@ function aplicarConfiguracoes(config) {
               existingCarousel.dispose();
             }
             
-            // Criar novo carousel com configurações para início automático
-            const carouselInstance = new bootstrap.Carousel(carouselElement, {
-              interval: 4000,     // 4 segundos entre transições
-              wrap: true,         // Ciclo contínuo
-              touch: true,        // Swipe habilitado
-              keyboard: true      // Navegação por teclado
-            });
+	            // Criar novo carousel com configurações para início automático
+		            const carouselInstance = new bootstrap.Carousel(carouselElement, {
+		              interval: 4000,     // 4 segundos entre transições (velocidade padrão)
+		              wrap: true,         // Ciclo contínuo
+		              touch: true,        // Swipe habilitado
+		              keyboard: true      // Navegação por teclado
+		            });
             
             // Iniciar automaticamente
             carouselInstance.cycle();
@@ -573,26 +573,95 @@ function renderizarImoveis(imoveis) {
     const container = document.getElementById(s.id);
     if (!container) return;
     
-    const lista = (imoveis || []).filter(i => i.type === s.type);
-    container.innerHTML = lista.length === 0 
-      ? '<p class="text-center text-muted col-12">Em breve mais imóveis...</p>' 
-      : '';
-
-    lista.forEach(imovel => {
-      const img = imovel.image_urls?.[0] || BANNER_PADRAO;
-      container.innerHTML += `
-        <div class="col mb-4">
-          <div class="card h-100 shadow border-0 property-card">
-            <img src="${img}" class="card-img-top" style="height:250px;object-fit:cover;" onerror="this.src='${BANNER_PADRAO}'">
-            <div class="card-body d-flex flex-column">
-              <h5 class="card-title fw-bold">${imovel.title}</h5>
-              <p class="text-muted small">${imovel.location || 'Uberlândia'}</p>
-              <p class="card-text flex-grow-1">${(imovel.description || '').substring(0,100)}...</p>
-              <p class="text-primary fw-bold fs-3 mt-auto">${imovel.price || 'Consulte'}</p>
-            </div>
-          </div>
-        </div>`;
-    });
+	    const lista = (imoveis || []).filter(i => i.type === s.type);
+	    
+	    if (lista.length === 0) {
+	      container.innerHTML = '<p class="text-center text-muted col-12">Em breve mais imóveis...</p>';
+	      return;
+	    }
+	    
+	    // 1. Agrupar imóveis em slides de 3
+	    const slides = [];
+	    for (let i = 0; i < lista.length; i += 3) {
+	      slides.push(lista.slice(i, i + 3));
+	    }
+	    
+	    const carouselId = `${s.id}-carousel`;
+	    
+	    // 2. Gerar o HTML do carrossel
+	    let carouselHTML = `
+	      <div id="${carouselId}" class="carousel slide" data-bs-ride="carousel" data-bs-interval="false">
+	        <div class="carousel-indicators">
+	          ${slides.map((_, index) => `
+	            <button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${index}" 
+	                    class="${index === 0 ? 'active' : ''}" aria-label="Slide ${index + 1}"></button>
+	          `).join('')}
+	        </div>
+	        <div class="carousel-inner">
+	          ${slides.map((slide, slideIndex) => `
+	            <div class="carousel-item ${slideIndex === 0 ? 'active' : ''}">
+	              <div class="row row-cols-1 row-cols-md-3 g-4">
+	                ${slide.map(imovel => {
+	                  const img = imovel.image_urls?.[0] || BANNER_PADRAO;
+	                  const whatsappLink = document.getElementById('cfg_whatsapp')?.value || 'https://wa.me/5534999704808';
+	                  
+	                  return `
+	                    <div class="col">
+	                      <div class="card h-100 shadow border-0 property-card">
+	                        <img src="${img}" class="card-img-top" style="height:250px;object-fit:cover;" onerror="this.src='${BANNER_PADRAO}'">
+	                        <div class="card-body d-flex flex-column">
+	                          <h5 class="card-title fw-bold text-truncate">${imovel.title}</h5>
+	                          <p class="text-muted small mb-2"><i class="bi bi-geo-alt-fill me-1"></i>${imovel.location || 'Uberlândia'}</p>
+	                          
+	                          <!-- Detalhes do Imóvel -->
+	                          <div class="row g-1 mb-3 small text-muted">
+	                            <div class="col-6"><i class="bi bi-currency-dollar me-1"></i>Preço: ${imovel.price || 'Consulte'}</div>
+	                            <div class="col-6"><i class="bi bi-rulers me-1"></i>Área: ${imovel.area || '-'}</div>
+	                            <div class="col-6"><i class="bi bi-house-door-fill me-1"></i>Quartos: ${imovel.bedrooms || '-'}</div>
+	                            <div class="col-6"><i class="bi bi-droplet-fill me-1"></i>Banheiros: ${imovel.bathrooms || '-'}</div>
+	                            <div class="col-6"><i class="bi bi-car-fill me-1"></i>Vagas: ${imovel.garage || '-'}</div>
+	                            <div class="col-6"><i class="bi bi-water me-1"></i>Piscina: ${imovel.pool ? 'Sim' : 'Não'}</div>
+	                          </div>
+	                          
+	                          <a href="${whatsappLink}" target="_blank" class="btn btn-success mt-auto fw-bold">
+	                            <i class="bi bi-whatsapp me-2"></i>Falar com Consultor
+	                          </a>
+	                        </div>
+	                      </div>
+	                    </div>
+	                  `;
+	                }).join('')}
+	              </div>
+	            </div>
+	          `).join('')}
+	        </div>
+	        
+	        <!-- Controles -->
+	        ${slides.length > 1 ? `
+	          <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
+	            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+	            <span class="visually-hidden">Anterior</span>
+	          </button>
+	          <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next">
+	            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+	            <span class="visually-hidden">Próximo</span>
+	          </button>
+	        ` : ''}
+	      </div>
+	    `;
+	    
+	    container.innerHTML = carouselHTML;
+	    
+	    // 3. Inicializar o carrossel
+	    const carouselElement = document.getElementById(carouselId);
+	    if (carouselElement) {
+	      // Inicializa o carrossel sem auto-slide (interval: false)
+		      const carouselInstance = new bootstrap.Carousel(carouselElement, {
+		        interval: false, // Desliga o auto-slide para navegação manual (Fixo)
+		        wrap: true
+		      });
+		      carouselInstance.pause(); // Garante que ele não inicie automaticamente
+	    }
   });
 }
 
