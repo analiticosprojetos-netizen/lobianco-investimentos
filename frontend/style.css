@@ -331,3 +331,26 @@ html {
 .border-light {
   border-color: #dee2e6 !important;
 }
+:root { 
+  --azul: #0066CC; 
+  --azul-secundario: #003366;
+  --cor-texto: #333333;
+}
+
+/* Aplica as cores dinamicamente */
+.text-primary { color: var(--azul) !important; }
+.bg-primary { background-color: var(--azul) !important; }
+.btn-primary { 
+  background-color: var(--azul) !important; 
+  border-color: var(--azul) !important; 
+}
+.btn-primary:hover { 
+  background-color: var(--azul-secundario) !important; 
+  border-color: var(--azul-secundario) !important; 
+}
+
+body { color: var(--cor-texto); }
+
+.tag {
+  background: var(--azul) !important;
+}

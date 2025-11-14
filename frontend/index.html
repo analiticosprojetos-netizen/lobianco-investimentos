@@ -125,63 +125,60 @@
     </div>
   </footer>
 
-  <!-- MODAL DE LOGIN -->
-  <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title">Área de Gestão</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label">E-mail</label>
-            <input type="text" id="loginEmail" class="form-control" placeholder="qualquer coisa">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Senha</label>
-            <input type="password" id="loginPassword" class="form-control" placeholder="qualquer coisa">
-          </div>
-          <div class="text-danger small" id="loginError"></div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" class="btn btn-success" id="btnLogin">ENTRAR</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL DE GESTÃO COM CONFIGURAÇÃO COMPLETA -->
-<div class="modal fade" id="gestaoModal" tabindex="-1">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+   <!-- MODAL DE LOGIN -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header bg-dark text-white">
-        <h4 class="modal-title">Painel de Gestão - Configurações Completas</h4>
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">Área de Gestão</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <ul class="nav nav-tabs mb-4">
-          <li class="nav-item">
-            <a class="nav-link active" data-bs-toggle="tab" href="#tabConfig">Configuração Geral</a>
+        <div class="mb-3">
+          <label class="form-label">E-mail</label>
+          <input type="text" id="loginEmail" class="form-control" placeholder="qualquer coisa">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Senha</label>
+          <input type="password" id="loginPassword" class="form-control" placeholder="qualquer coisa">
+        </div>
+        <div class="text-danger small" id="loginError"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-success" id="btnLogin">ENTRAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DE GESTÃO CORRIGIDO -->
+<div class="modal fade" id="gestaoModal" tabindex="-1" aria-labelledby="gestaoModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h4 class="modal-title" id="gestaoModalLabel">Painel de Gestão - Lobianco Investimentos</h4>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="nav nav-tabs mb-4" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabConfig" type="button" role="tab" aria-controls="tabConfig" aria-selected="true">Configuração</button>
           </li>
-          <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#tabAparencia">Aparência</a>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabLancamentos" type="button" role="tab" aria-controls="tabLancamentos" aria-selected="false">Lançamentos</button>
           </li>
-          <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#tabLancamentos">Lançamentos</a>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabPlanta" type="button" role="tab" aria-controls="tabPlanta" aria-selected="false">Na Planta</button>
           </li>
-          <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#tabPlanta">Na Planta</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#tabAluguel">Aluguel</a>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabAluguel" type="button" role="tab" aria-controls="tabAluguel" aria-selected="false">Aluguel</button>
           </li>
         </ul>
 
         <div class="tab-content">
-          <!-- ABA CONFIGURAÇÃO GERAL -->
-          <div class="tab-pane fade show active" id="tabConfig">
+          <!-- ABA CONFIGURAÇÃO -->
+          <div class="tab-pane fade show active" id="tabConfig" role="tabpanel" aria-labelledby="config-tab">
             <h5 class="text-primary fw-bold mb-4">Configurações Gerais do Site</h5>
             
             <div class="row">
@@ -190,22 +187,22 @@
                   <h6 class="fw-bold mb-3">Informações da Empresa</h6>
                   
                   <div class="mb-3">
-                    <label class="form-label fw-bold">Nome do Site *</label>
+                    <label for="cfg_siteName" class="form-label fw-bold">Nome do Site *</label>
                     <input type="text" class="form-control" id="cfg_siteName" placeholder="Lobianco Investimentos">
                   </div>
                   
                   <div class="mb-3">
-                    <label class="form-label fw-bold">Telefone/WhatsApp *</label>
+                    <label for="cfg_phone" class="form-label fw-bold">Telefone/WhatsApp *</label>
                     <input type="text" class="form-control" id="cfg_phone" placeholder="(34) 99970-4808">
                   </div>
                   
                   <div class="mb-3">
-                    <label class="form-label fw-bold">E-mail da Empresa</label>
+                    <label for="cfg_email" class="form-label fw-bold">E-mail da Empresa</label>
                     <input type="email" class="form-control" id="cfg_email" placeholder="contato@lobianco.com.br">
                   </div>
                   
                   <div class="mb-3">
-                    <label class="form-label fw-bold">Endereço</label>
+                    <label for="cfg_address" class="form-label fw-bold">Endereço</label>
                     <input type="text" class="form-control" id="cfg_address" placeholder="Uberlândia - MG">
                   </div>
                 </div>
@@ -216,110 +213,115 @@
                   <h6 class="fw-bold mb-3">Redes Sociais</h6>
                   
                   <div class="mb-3">
-                    <label class="form-label fw-bold">Link do WhatsApp</label>
+                    <label for="cfg_whatsapp" class="form-label fw-bold">Link do WhatsApp</label>
                     <input type="url" class="form-control" id="cfg_whatsapp" placeholder="https://wa.me/5534999704808">
                   </div>
                   
                   <div class="mb-3">
-                    <label class="form-label fw-bold">Link do Instagram</label>
+                    <label for="cfg_instagram" class="form-label fw-bold">Link do Instagram</label>
                     <input type="url" class="form-control" id="cfg_instagram" placeholder="https://instagram.com/lobianco">
                   </div>
                   
                   <div class="mb-3">
-                    <label class="form-label fw-bold">Link do Facebook</label>
+                    <label for="cfg_facebook" class="form-label fw-bold">Link do Facebook</label>
                     <input type="url" class="form-control" id="cfg_facebook" placeholder="https://facebook.com/lobianco">
                   </div>
                 </div>
               </div>
             </div>
 
-            <div class="border rounded p-4 bg-light">
+            <!-- SEÇÃO DE CORES -->
+            <div class="border rounded p-4 bg-light mb-4">
+              <h6 class="fw-bold mb-3">Cores do Site</h6>
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label for="cfg_mainColor" class="form-label fw-bold">Cor Principal</label>
+                    <input type="color" class="form-control form-control-color" id="cfg_mainColor" value="#0066CC" title="Escolha a cor principal">
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label for="cfg_secondaryColor" class="form-label fw-bold">Cor Secundária</label>
+                    <input type="color" class="form-control form-control-color" id="cfg_secondaryColor" value="#003366" title="Escolha a cor secundária">
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label for="cfg_textColor" class="form-label fw-bold">Cor do Texto</label>
+                    <input type="color" class="form-control form-control-color" id="cfg_textColor" value="#333333" title="Escolha a cor do texto">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SEÇÃO DE LOGO -->
+            <div class="border rounded p-4 bg-light mb-4">
               <h6 class="fw-bold mb-3">Logo do Site</h6>
-              <div class="row align-items-end">
+              <div class="row">
                 <div class="col-md-6">
                   <input type="file" class="form-control mb-3" id="cfg_logo" accept="image/*">
+                  <small class="text-muted">Formatos: PNG, JPG, SVG (máx. 10MB)</small>
+                  
+                  <div class="row mt-3">
+                    <div class="col-md-6">
+                      <label for="cfg_logoWidth" class="form-label fw-bold">Largura da Logo</label>
+                      <input type="text" class="form-control" id="cfg_logoWidth" placeholder="60px" value="60px">
+                    </div>
+                    <div class="col-md-6">
+                      <label for="cfg_logoHeight" class="form-label fw-bold">Altura da Logo</label>
+                      <input type="text" class="form-control" id="cfg_logoHeight" placeholder="60px" value="60px">
+                    </div>
+                  </div>
                 </div>
-                <div class="col-md-3">
-                  <label class="form-label fw-bold">Largura</label>
-                  <input type="text" class="form-control" id="cfg_logoWidth" placeholder="60px" value="60px">
-                </div>
-                <div class="col-md-3">
-                  <label class="form-label fw-bold">Altura</label>
-                  <input type="text" class="form-control" id="cfg_logoHeight" placeholder="60px" value="60px">
+                <div class="col-md-6">
+                  <div class="text-center">
+                    <h6 class="fw-bold mb-2">Logo Atual</h6>
+                    <div id="logoPreview" class="border rounded p-3 bg-white">
+                      <!-- Logo será carregada aqui dinamicamente -->
+                      <p class="text-muted small">Nenhuma logo configurada</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <small class="text-muted">Use valores como: 60px, 80px, 100px, 5rem, etc.</small>
             </div>
 
-            <div class="text-end mt-4">
-              <button class="btn btn-success btn-lg px-5" onclick="salvarConfiguracao()">
-                <i class="bi bi-check-circle"></i> SALVAR CONFIGURAÇÕES
-              </button>
-            </div>
-          </div>
-
-          <!-- ABA APARÊNCIA -->
-          <div class="tab-pane fade" id="tabAparencia">
-            <h5 class="text-primary fw-bold mb-4">Personalização de Cores</h5>
-            
+            <!-- SEÇÃO DE BANNERS -->
             <div class="border rounded p-4 bg-light mb-4">
-              <div class="row g-4">
-                <div class="col-md-4">
-                  <label class="form-label fw-bold">Cor Principal</label>
-                  <input type="color" class="form-control form-control-color" id="cfg_mainColor" value="#0066CC" title="Cor principal do site">
-                  <small class="text-muted">Usada em botões, títulos principais</small>
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label fw-bold">Cor Secundária</label>
-                  <input type="color" class="form-control form-control-color" id="cfg_secondaryColor" value="#003366" title="Cor secundária">
-                  <small class="text-muted">Usada em hovers, elementos secundários</small>
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label fw-bold">Cor do Texto</label>
-                  <input type="color" class="form-control form-control-color" id="cfg_textColor" value="#333333" title="Cor do texto">
-                  <small class="text-muted">Cor principal dos textos</small>
-                </div>
+              <h6 class="fw-bold mb-3">Banners do Carrossel</h6>
+              <div class="mb-3">
+                <input type="file" multiple class="form-control" id="cfg_banners" accept="image/*">
+                <small class="text-muted">Você pode selecionar várias imagens de uma vez (máx. 10MB cada)</small>
               </div>
               
-              <div class="mt-4 p-3 border rounded bg-white">
-                <h6 class="fw-bold">Pré-visualização das Cores:</h6>
-                <div class="d-flex gap-3 mt-2">
-                  <span class="badge" id="previewMainColor" style="background: #0066CC; color: white">Principal</span>
-                  <span class="badge" id="previewSecondaryColor" style="background: #003366; color: white">Secundária</span>
-                  <span class="badge" id="previewTextColor" style="background: #333333; color: white">Texto</span>
+              <!-- VISUALIZAÇÃO DOS BANNERS ATUAIS -->
+              <div id="bannersAtuais">
+                <!-- Banners serão carregados aqui dinamicamente -->
+                <div class="alert alert-info">
+                  <i class="fas fa-info-circle"></i> Nenhum banner personalizado configurado
                 </div>
               </div>
             </div>
 
-            <div class="border rounded p-4 bg-light">
-              <h6 class="fw-bold mb-3">Banners do Carrossel Principal</h6>
-              <input type="file" multiple class="form-control mb-3" id="cfg_banners" accept="image/*">
-              <div class="alert alert-info">
-                <i class="bi bi-info-circle"></i> Selecione até 5 imagens para o carrossel hero. 
-                As imagens serão redimensionadas automaticamente.
-              </div>
-              <div id="previewBanners" class="row g-3 mt-3"></div>
-            </div>
-
             <div class="text-end mt-4">
               <button class="btn btn-success btn-lg px-5" onclick="salvarConfiguracao()">
-                <i class="bi bi-check-circle"></i> SALVAR CONFIGURAÇÕES
+                <i class="fas fa-save"></i> SALVAR CONFIGURAÇÕES
               </button>
             </div>
           </div>
 
           <!-- ABA LANÇAMENTOS -->
-          <div class="tab-pane fade" id="tabLancamentos">
+          <div class="tab-pane fade" id="tabLancamentos" role="tabpanel" aria-labelledby="lancamentos-tab">
             <!-- Carregado via JavaScript -->
           </div>
 
           <!-- ABA NA PLANTA -->
-          <div class="tab-pane fade" id="tabPlanta">
+          <div class="tab-pane fade" id="tabPlanta" role="tabpanel" aria-labelledby="planta-tab">
             <!-- Carregado via JavaScript -->
           </div>
 
           <!-- ABA ALUGUEL -->
-          <div class="tab-pane fade" id="tabAluguel">
+          <div class="tab-pane fade" id="tabAluguel" role="tabpanel" aria-labelledby="aluguel-tab">
             <!-- Carregado via JavaScript -->
           </div>
         </div>
@@ -327,8 +329,97 @@
     </div>
   </div>
 </div>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js"></script>
+
+<!-- MODAL EDIÇÃO DE IMÓVEL (FORA DO MODAL DE GESTÃO) -->
+<div class="modal fade" id="editarImovelModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title"><i class="fas fa-edit"></i> Editar Imóvel</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit_id">
+        
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label fw-bold">Título *</label>
+            <input type="text" class="form-control" id="edit_titulo" required>
+          </div>
+          
+          <div class="col-12">
+            <label class="form-label fw-bold">Descrição</label>
+            <textarea class="form-control" rows="3" id="edit_descricao" placeholder="Descreva o imóvel..."></textarea>
+          </div>
+          
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Preço</label>
+            <input type="text" class="form-control" id="edit_preco" placeholder="R$ 500.000,00">
+          </div>
+          
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Localização</label>
+            <input type="text" class="form-control" id="edit_localizacao" placeholder="Uberlândia - MG">
+          </div>
+          
+          <div class="col-md-3">
+            <label class="form-label fw-bold">Quartos</label>
+            <input type="number" class="form-control" id="edit_quartos" placeholder="0" min="0">
+          </div>
+          
+          <div class="col-md-3">
+            <label class="form-label fw-bold">Banheiros</label>
+            <input type="number" class="form-control" id="edit_banheiros" placeholder="0" min="0">
+          </div>
+          
+          <div class="col-md-3">
+            <label class="form-label fw-bold">Área (m²)</label>
+            <input type="text" class="form-control" id="edit_area" placeholder="150">
+          </div>
+          
+          <div class="col-md-3">
+            <label class="form-label fw-bold">Vagas</label>
+            <input type="number" class="form-control" id="edit_garagem" placeholder="0" min="0">
+          </div>
+          
+          <div class="col-12">
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" id="edit_piscina">
+              <label class="form-check-label fw-bold">Piscina</label>
+            </div>
+          </div>
+          
+          <!-- Fotos Atuais -->
+          <div class="col-12">
+            <div id="fotosAtuais">
+              <h6 class="fw-bold mt-4 mb-3">Fotos Atuais</h6>
+              <p class="text-muted">Carregando fotos...</p>
+            </div>
+          </div>
+          
+          <!-- Novas Fotos -->
+          <div class="col-12">
+            <label class="form-label fw-bold">Adicionar Novas Fotos</label>
+            <input type="file" multiple class="form-control" id="edit_novas_fotos" accept="image/*">
+            <div class="form-text">Selecione novas fotos para adicionar às existentes (máx. 10MB cada)</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+        <button type="button" class="btn btn-success" onclick="salvarEdicaoImovel()">
+          <i class="fas fa-save"></i> Salvar Alterações
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+<script src="script.js"></script>
 </body>
 </html>

@@ -1,118 +1,60 @@
-// script.js - VERSÃO CORRIGIDA - SEM ERRO DE MULTIPLAS LINHAS
-const supabase = window.supabase.createClient(
-  'https://zdwacbnbkzsqwrmvftyc.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpkd2FjYm5ia3pzcXdybXZmdHljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5OTI5NDUsImV4cCI6MjA3ODU2ODk0NX0.JR-HYIT1eDkKdsb0UC7R2IBgV4pX1ON93TNEeGiB3jA'
-);
-
+// frontend/script.js - VERSÃO COMPLETA CORRIGIDA
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const API_BASE = isLocal ? 'http://localhost:3000/api' : '/api';
 const BANNER_PADRAO = "https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?auto=format&fit=crop&w=2070&q=80";
 
-// UPLOAD DE FOTOS
-async function uploadFotos(files, pasta) {
-  const urls = [];
-  
-  for (let file of files) {
-    try {
-      const nome = Date.now() + "_" + Math.random().toString(36).substring(2) + "." + file.name.split('.').pop();
-      const caminho = `${pasta}/${nome}`;
-      
-      const { data, error } = await supabase.storage
-        .from('public_assets')
-        .upload(caminho, file, { 
-          upsert: true,
-          cacheControl: '3600'
-        });
-      
-      if (error) {
-        console.error("Erro no upload:", error);
-        continue;
-      }
-      
-      const { data: urlData } = supabase.storage
-        .from('public_assets')
-        .getPublicUrl(caminho);
-      
-      urls.push(urlData.publicUrl);
-      
-    } catch (error) {
-      console.error("Erro no processamento do arquivo:", error);
-    }
-  }
-  
-  return urls;
-}
+console.log(`🌍 Ambiente: ${isLocal ? 'LOCAL' : 'PRODUÇÃO'}`);
+console.log(`🔗 API Base: ${API_BASE}`);
 
-// EXCLUIR FOTOS DO STORAGE
-async function excluirFotosStorage(urls) {
-  if (!urls || urls.length === 0) return;
-  
+// ========== FUNÇÕES DE API MELHORADAS ==========
+async function apiCall(endpoint, options = {}) {
   try {
-    const pathsToDelete = [];
+    console.log(`🌐 Fazendo requisição para: ${endpoint}`);
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+      },
+      ...options
+    });
     
-    for (let url of urls) {
-      const pathMatch = url.match(/public_assets\/(.+)$/);
-      if (pathMatch && pathMatch[1]) {
-        pathsToDelete.push(pathMatch[1]);
-      }
+    // Verificar se a resposta é JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      console.error('❌ Resposta não é JSON:', text.substring(0, 200));
+      throw new Error(`Resposta inválida do servidor (${response.status}): ${text.substring(0, 100)}`);
     }
     
-    if (pathsToDelete.length > 0) {
-      const { error } = await supabase.storage
-        .from('public_assets')
-        .remove(pathsToDelete);
-      
-      if (error) {
-        console.error("Erro ao excluir fotos:", error);
-      }
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
+    
+    const data = await response.json();
+    console.log(`✅ Resposta de ${endpoint}:`, data);
+    return data;
+    
   } catch (error) {
-    console.error("Erro ao excluir fotos:", error);
+    console.error(`❌ Erro na API ${endpoint}:`, error);
+    throw error;
   }
 }
 
-// CARREGAR CONFIGURAÇÃO - CORRIGIDO
+// ========== CONFIGURAÇÕES COM CORES ==========
 async function carregarConfig() {
   try {
-    // CORREÇÃO: Usar select().limit(1) em vez de maybeSingle()
-    const { data, error } = await supabase
-      .from('site_config')
-      .select('*')
-      .order('updated_at', { ascending: false })
-      .limit(1);
-    
-    if (error) {
-      console.error("Erro ao carregar configuração:", error);
-      aplicarConfigPadrao();
-      return;
-    }
-    
-    // Pega a primeira configuração (mais recente)
-    const c = data && data.length > 0 ? data[0] : null;
-    
-    const config = c || { 
-      site_name: "Lobianco Investimentos", 
-      phone: "(34) 99970-4808",
-      main_color: "#0066CC",
-      secondary_color: "#003366",
-      text_color: "#333333",
-      logo_width: "60px",
-      logo_height: "60px",
-      company_address: "Uberlândia - MG",
-      company_email: "contato@lobianco.com.br",
-      whatsapp_link: "https://wa.me/5534999704808",
-      instagram_link: "https://instagram.com/lobianco",
-      facebook_link: "https://facebook.com/lobianco"
-    };
-
+    const config = await apiCall('/site-config');
     aplicarConfiguracoes(config);
-    
   } catch (error) {
-    console.error("Erro em carregarConfig:", error);
+    console.error('Erro ao carregar configuração:', error);
     aplicarConfigPadrao();
   }
 }
 
-// APLICAR CONFIGURAÇÕES NO SITE
 function aplicarConfiguracoes(config) {
+  console.log('🎨 Aplicando configurações:', config);
+  
   // Nome do site
   if (document.getElementById('siteName')) {
     document.getElementById('siteName').textContent = config.site_name || "Lobianco";
@@ -124,9 +66,11 @@ function aplicarConfiguracoes(config) {
     if (config.logo_url) {
       siteLogo.src = config.logo_url;
       siteLogo.style.display = 'block';
+      siteLogo.style.width = config.logo_width || '60px';
+      siteLogo.style.height = config.logo_height || '60px';
+    } else {
+      siteLogo.style.display = 'none';
     }
-    siteLogo.style.width = config.logo_width || '60px';
-    siteLogo.style.height = config.logo_height || '60px';
   }
   
   // Telefone no footer
@@ -135,25 +79,39 @@ function aplicarConfiguracoes(config) {
       `${config.phone || "(34) 99970-4808"} | ${config.company_address || "Uberlândia - MG"}`;
   }
   
-  // Cores
-  document.documentElement.style.setProperty('--azul', config.main_color || '#0066CC');
-  document.documentElement.style.setProperty('--azul-secundario', config.secondary_color || '#003366');
-  document.documentElement.style.setProperty('--cor-texto', config.text_color || '#333333');
+  // ========== APLICAR CORES DO SITE ==========
+  if (config.main_color) {
+    document.documentElement.style.setProperty('--azul', config.main_color);
+    // Aplicar cor nos elementos
+    document.querySelectorAll('.btn-primary').forEach(btn => {
+      btn.style.backgroundColor = config.main_color;
+      btn.style.borderColor = config.main_color;
+    });
+    document.querySelectorAll('.text-primary').forEach(el => {
+      el.style.color = config.main_color;
+    });
+    document.querySelectorAll('.tag').forEach(tag => {
+      tag.style.backgroundColor = config.main_color;
+    });
+  }
+  
+  if (config.secondary_color) {
+    document.documentElement.style.setProperty('--azul-secundario', config.secondary_color);
+  }
+  
+  if (config.text_color) {
+    document.documentElement.style.setProperty('--cor-texto', config.text_color);
+    document.body.style.color = config.text_color;
+  }
   
   // Redes sociais
   const whatsappLink = document.querySelector('.social-bar .whatsapp');
   const instagramLink = document.querySelector('.social-bar .instagram');
   const facebookLink = document.querySelector('.social-bar .facebook');
   
-  if (whatsappLink && config.whatsapp_link) {
-    whatsappLink.href = config.whatsapp_link;
-  }
-  if (instagramLink && config.instagram_link) {
-    instagramLink.href = config.instagram_link;
-  }
-  if (facebookLink && config.facebook_link) {
-    facebookLink.href = config.facebook_link;
-  }
+  if (whatsappLink && config.whatsapp_link) whatsappLink.href = config.whatsapp_link;
+  if (instagramLink && config.instagram_link) instagramLink.href = config.instagram_link;
+  if (facebookLink && config.facebook_link) facebookLink.href = config.facebook_link;
   
   // Carousel
   const carousel = document.getElementById('carouselImages');
@@ -184,63 +142,316 @@ function aplicarConfigPadrao() {
   });
 }
 
-// CARREGAR IMÓVEIS
-async function carregarImoveis() {
+// SALVAR CONFIGURAÇÃO COMPLETA - CORRIGIDO
+window.salvarConfiguracao = async function() {
   try {
-    const { data, error } = await supabase.from('items').select('*');
+    console.log('💾 Iniciando salvamento da configuração...');
     
-    if (error) {
-      console.error("Erro ao carregar imóveis:", error);
-      return;
+    const siteName = document.getElementById('cfg_siteName')?.value.trim() || "Lobianco Investimentos";
+    const phone = document.getElementById('cfg_phone')?.value.trim() || "(34) 99970-4808";
+    const mainColor = document.getElementById('cfg_mainColor')?.value || "#0066CC";
+    const secondaryColor = document.getElementById('cfg_secondaryColor')?.value || "#003366";
+    const textColor = document.getElementById('cfg_textColor')?.value || "#333333";
+    const email = document.getElementById('cfg_email')?.value.trim() || "";
+    const address = document.getElementById('cfg_address')?.value.trim() || "";
+    const whatsapp = document.getElementById('cfg_whatsapp')?.value.trim() || "";
+    const instagram = document.getElementById('cfg_instagram')?.value.trim() || "";
+    const facebook = document.getElementById('cfg_facebook')?.value.trim() || "";
+    const logoWidth = document.getElementById('cfg_logoWidth')?.value || "60px";
+    const logoHeight = document.getElementById('cfg_logoHeight')?.value || "60px";
+    
+    const logoFile = document.getElementById('cfg_logo')?.files[0];
+    const bannerFiles = document.getElementById('cfg_banners')?.files;
+    
+    let logoUrl = '';
+    let bannerUrls = [];
+
+    // Upload da logo
+    if (logoFile) {
+      console.log('📤 Fazendo upload da logo...');
+      logoUrl = await fazerUploadArquivo(logoFile, 'logo');
+      if (!logoUrl) throw new Error('Falha no upload da logo');
+      console.log('✅ Logo enviada:', logoUrl);
     }
 
-    const secoes = [
-      { id: 'lancamentos-cards', type: 'lancamento' },
-      { id: 'planta-cards', type: 'na_planta' },
-      { id: 'aluguel-cards', type: 'aluguel' }
-    ];
+    // Upload dos banners
+    if (bannerFiles && bannerFiles.length > 0) {
+      console.log(`📤📤 Fazendo upload de ${bannerFiles.length} banners...`);
+      const uploadResult = await fazerUploadMultiplo(bannerFiles, 'banners');
+      if (uploadResult && uploadResult.urls) {
+        bannerUrls = uploadResult.urls;
+        console.log('✅ Banners enviados:', bannerUrls);
+        alert(`✅ ${uploadResult.message}`);
+      } else {
+        throw new Error('Falha no upload dos banners');
+      }
+    }
 
-    secoes.forEach(s => {
-      const container = document.getElementById(s.id);
-      if (!container) return;
-      const lista = (data || []).filter(i => i.type === s.type);
-      container.innerHTML = lista.length === 0 ? '<p class="text-center text-muted col-12">Em breve mais imóveis...</p>' : '';
+    // Salvar configuração
+    const configData = {
+      site_name: siteName,
+      phone: phone,
+      main_color: mainColor,
+      secondary_color: secondaryColor,
+      text_color: textColor,
+      logo_url: logoUrl,
+      logo_width: logoWidth,
+      logo_height: logoHeight,
+      banner_images: bannerUrls,
+      company_email: email,
+      company_address: address,
+      whatsapp_link: whatsapp,
+      instagram_link: instagram,
+      facebook_link: facebook
+    };
 
-      lista.forEach(imovel => {
-        const img = imovel.image_urls?.[0] || BANNER_PADRAO;
-        container.innerHTML += `
-          <div class="col mb-4">
-            <div class="card h-100 shadow border-0 property-card">
-              <img src="${img}" class="card-img-top" style="height:250px;object-fit:cover;" onerror="this.src='${BANNER_PADRAO}'">
-              <div class="card-body d-flex flex-column">
-                <h5 class="card-title fw-bold">${imovel.title}</h5>
-                <p class="text-muted small">${imovel.location || 'Uberlândia'}</p>
-                <p class="card-text flex-grow-1">${(imovel.description || '').substring(0,100)}...</p>
-                <p class="text-primary fw-bold fs-3 mt-auto">${imovel.price || 'Consulte'}</p>
-              </div>
-            </div>
-          </div>`;
-      });
+    console.log('💾 Salvando configuração no banco...', configData);
+    await apiCall('/site-config', {
+      method: 'POST',
+      body: JSON.stringify(configData)
     });
+
+    alert("✅ Configurações salvas com sucesso! A página será recarregada.");
+    location.reload();
+
   } catch (error) {
-    console.error("Erro em carregarImoveis:", error);
+    console.error('❌ Erro ao salvar configuração:', error);
+    alert("❌ Erro ao salvar configuração: " + error.message);
+  }
+};
+
+// ========== UPLOAD DE ARQUIVOS CORRIGIDOS ==========
+async function fazerUploadArquivo(file, tipo) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      try {
+        const ext = file.name.split('.').pop() || 'jpg';
+        const filename = `${tipo}_${Date.now()}.${ext}`;
+        
+        console.log(`📤 Enviando ${tipo}: ${filename}`);
+        const uploadData = await apiCall('/upload', {
+          method: 'POST',
+          body: JSON.stringify({
+            file: e.target.result,
+            filename: filename,
+            type: tipo
+          })
+        });
+        
+        resolve(uploadData.url);
+      } catch (error) {
+        reject(error);
+      }
+    };
+    reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function fazerUploadMultiplo(files, tipo) {
+  console.log(`📦 Preparando ${files.length} arquivos para upload...`);
+  const filesData = [];
+  
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    
+    // Validar tamanho
+    if (file.size > 10 * 1024 * 1024) {
+      console.warn(`❌ Arquivo muito grande: ${file.name}`);
+      alert(`❌ Arquivo ${file.name} é muito grande (máximo 10MB)`);
+      continue;
+    }
+
+    // Validar tipo
+    if (!file.type.startsWith('image/')) {
+      console.warn(`❌ Tipo inválido: ${file.type}`);
+      alert(`❌ Arquivo ${file.name} não é uma imagem válida`);
+      continue;
+    }
+
+    try {
+      const fileData = await readFileAsBase64(file);
+      const ext = file.name.split('.').pop() || 'jpg';
+      const filename = `${tipo}_${Date.now()}_${i}.${ext}`;
+      
+      filesData.push({
+        file: fileData,
+        filename: filename
+      });
+      
+      console.log(`✅ Arquivo preparado: ${filename}`);
+    } catch (error) {
+      console.error(`❌ Erro ao ler arquivo ${file.name}:`, error);
+      alert(`❌ Erro ao processar arquivo ${file.name}`);
+    }
+  }
+
+  if (filesData.length === 0) {
+    throw new Error('Nenhum arquivo válido para upload');
+  }
+
+  console.log(`🚀 Enviando ${filesData.length} arquivos para /upload-banners...`);
+  
+  try {
+    const response = await apiCall('/upload-banners', {
+      method: 'POST',
+      body: JSON.stringify({
+        files: filesData
+      })
+    });
+    
+    console.log('✅ Upload múltiplo concluído:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Erro no upload múltiplo:', error);
+    
+    // Tentar upload individual como fallback
+    console.log('🔄 Tentando upload individual como fallback...');
+    const urls = [];
+    for (const fileData of filesData) {
+      try {
+        const uploadData = await apiCall('/upload', {
+          method: 'POST',
+          body: JSON.stringify({
+            file: fileData.file,
+            filename: fileData.filename,
+            type: 'banners'
+          })
+        });
+        urls.push(uploadData.url);
+      } catch (individualError) {
+        console.error('❌ Erro no upload individual:', individualError);
+      }
+    }
+    
+    return {
+      success: true,
+      urls: urls,
+      message: `${urls.length} de ${filesData.length} banner(s) enviado(s) com sucesso (fallback)`
+    };
   }
 }
 
-// SALVAR IMÓVEL
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+    reader.readAsDataURL(file);
+  });
+}
+
+// ========== TESTAR CONEXÃO COM API ==========
+async function testarConexao() {
+  try {
+    console.log('🔍 Testando conexão com a API...');
+    
+    // Testar health check
+    await apiCall('/health');
+    
+    // Testar debug upload
+    await apiCall('/debug-upload');
+    
+    console.log('✅ Todas as rotas da API estão funcionando!');
+    return true;
+  } catch (error) {
+    console.error('❌ Erro na conexão com a API:', error);
+    return false;
+  }
+}
+
+// ========== IMÓVEIS ==========
+async function carregarImoveis() {
+  try {
+    const imoveis = await apiCall('/imoveis');
+    renderizarImoveis(imoveis);
+  } catch (error) {
+    console.error('Erro ao carregar imóveis:', error);
+  }
+}
+
+function renderizarImoveis(imoveis) {
+  const secoes = [
+    { id: 'lancamentos-cards', type: 'lancamento' },
+    { id: 'planta-cards', type: 'na_planta' },
+    { id: 'aluguel-cards', type: 'aluguel' }
+  ];
+
+  secoes.forEach(s => {
+    const container = document.getElementById(s.id);
+    if (!container) return;
+    
+    const lista = (imoveis || []).filter(i => i.type === s.type);
+    container.innerHTML = lista.length === 0 
+      ? '<p class="text-center text-muted col-12">Em breve mais imóveis...</p>' 
+      : '';
+
+    lista.forEach(imovel => {
+      const img = imovel.image_urls?.[0] || BANNER_PADRAO;
+      container.innerHTML += `
+        <div class="col mb-4">
+          <div class="card h-100 shadow border-0 property-card">
+            <img src="${img}" class="card-img-top" style="height:250px;object-fit:cover;" onerror="this.src='${BANNER_PADRAO}'">
+            <div class="card-body d-flex flex-column">
+              <h5 class="card-title fw-bold">${imovel.title}</h5>
+              <p class="text-muted small">${imovel.location || 'Uberlândia'}</p>
+              <p class="card-text flex-grow-1">${(imovel.description || '').substring(0,100)}...</p>
+              <p class="text-primary fw-bold fs-3 mt-auto">${imovel.price || 'Consulte'}</p>
+            </div>
+          </div>
+        </div>`;
+    });
+  });
+}
+
+// SALVAR IMÓVEL - CORRIGIDO
 window.salvarImovel = async function(tipo) {
   try {
     const titulo = document.getElementById(`tit_${tipo}`)?.value.trim();
     if (!titulo) {
-      alert("Preencha o título do imóvel!");
+      alert("❌ Preencha o título do imóvel!");
       return;
     }
 
     const fileInput = document.getElementById(`fotos_${tipo}`);
-    let fotosUrls = [];
-    
+    let fotosParaUpload = [];
+
+    // Processar fotos se existirem
     if (fileInput?.files.length > 0) {
-      fotosUrls = await uploadFotos(fileInput.files, tipo);
+      console.log(`📸 Processando ${fileInput.files.length} fotos...`);
+      
+      for (let i = 0; i < fileInput.files.length; i++) {
+        const file = fileInput.files[i];
+        
+        // Validar tamanho do arquivo
+        if (file.size > 10 * 1024 * 1024) {
+          alert(`❌ Arquivo ${file.name} é muito grande (máximo 10MB)`);
+          continue;
+        }
+
+        // Validar tipo do arquivo
+        if (!file.type.startsWith('image/')) {
+          alert(`❌ Arquivo ${file.name} não é uma imagem válida`);
+          continue;
+        }
+
+        try {
+          const fileData = await readFileAsBase64(file);
+          const ext = file.name.split('.').pop() || 'jpg';
+          const filename = `imovel_${tipo}_${Date.now()}_${i}.${ext}`;
+          
+          fotosParaUpload.push({
+            file: fileData,
+            filename: filename
+          });
+          
+          console.log(`✅ Foto preparada: ${filename}`);
+        } catch (error) {
+          console.error(`❌ Erro ao processar foto ${file.name}:`, error);
+          alert(`❌ Erro ao processar arquivo ${file.name}`);
+        }
+      }
     }
 
     const dados = {
@@ -248,176 +459,260 @@ window.salvarImovel = async function(tipo) {
       title: titulo,
       description: document.getElementById(`desc_${tipo}`)?.value || '',
       price: document.getElementById(`preco_${tipo}`)?.value || '',
-      location: document.getElementById(`loc_${tipo}`)?.value || '',
+      location: document.getElementById(`loc_${tipo}`)?.value || 'Uberlândia - MG',
       bedrooms: parseInt(document.getElementById(`quartos_${tipo}`)?.value) || 0,
       bathrooms: parseInt(document.getElementById(`banheiros_${tipo}`)?.value) || 0,
       area: document.getElementById(`area_${tipo}`)?.value || null,
       garage: parseInt(document.getElementById(`garagem_${tipo}`)?.value) || 0,
       pool: document.getElementById(`piscina_${tipo}`)?.checked || false,
-      image_urls: fotosUrls
+      fotosParaUpload: fotosParaUpload,
+      image_urls: [] // Será preenchido pelo backend com as URLs das fotos enviadas
     };
 
-    const { error } = await supabase.from('items').insert(dados);
+    console.log('💾 Enviando dados do imóvel...', {
+      tipo: dados.type,
+      titulo: dados.title,
+      fotos: dados.fotosParaUpload.length
+    });
 
-    if (error) {
-      alert("Erro ao salvar imóvel: " + error.message);
-    } else {
-      alert("Imóvel salvo com sucesso!");
-      // LIMPA TODOS OS CAMPOS
-      document.querySelectorAll(`#tit_${tipo}, #desc_${tipo}, #preco_${tipo}, #loc_${tipo}, #quartos_${tipo}, #banheiros_${tipo}, #area_${tipo}, #garagem_${tipo}`).forEach(el => {
-        el.value = '';
-      });
-      const piscinaCheckbox = document.getElementById(`piscina_${tipo}`);
-      if (piscinaCheckbox) piscinaCheckbox.checked = false;
-      
-      if (fileInput) fileInput.value = '';
-      carregarImoveis();
-    }
+    const resultado = await apiCall('/imoveis', {
+      method: 'POST',
+      body: JSON.stringify(dados)
+    });
+
+    alert(`✅ ${resultado.message || "Imóvel salvo com sucesso!"}`);
+    limparFormulario(tipo);
+    carregarImoveis();
+
   } catch (error) {
-    console.error("Erro em salvarImovel:", error);
-    alert("Erro ao salvar imóvel. Verifique o console.");
+    console.error('❌ Erro ao salvar imóvel:', error);
+    alert("❌ Erro ao salvar imóvel: " + error.message);
   }
 };
 
-// EXCLUIR IMÓVEL
+function limparFormulario(tipo) {
+  document.querySelectorAll(`#tit_${tipo}, #desc_${tipo}, #preco_${tipo}, #loc_${tipo}, #quartos_${tipo}, #banheiros_${tipo}, #area_${tipo}, #garagem_${tipo}`).forEach(el => {
+    el.value = '';
+  });
+  const piscinaCheckbox = document.getElementById(`piscina_${tipo}`);
+  if (piscinaCheckbox) piscinaCheckbox.checked = false;
+  
+  const fileInput = document.getElementById(`fotos_${tipo}`);
+  if (fileInput) fileInput.value = '';
+}
+
+// EXCLUIR IMÓVEL - CORRIGIDO
 window.excluirImovel = async function(id) {
   try {
-    if (!confirm("Tem certeza que quer excluir este imóvel? Esta ação não pode ser desfeita.")) return;
+    if (!confirm("🗑️ Tem certeza que quer excluir este imóvel?")) return;
+    
+    await apiCall(`/imoveis/${id}`, {
+      method: 'DELETE'
+    });
+    
+    alert("✅ Imóvel excluído com sucesso!");
+    carregarImoveis();
+  } catch (error) {
+    alert("❌ Erro ao excluir imóvel: " + error.message);
+  }
+}
 
-    const { data: imovel, error: fetchError } = await supabase
-      .from('items')
-      .select('image_urls')
-      .eq('id', id)
-      .single();
+// ========== FUNÇÕES DE EDIÇÃO DE IMÓVEIS ==========
 
-    if (fetchError) {
-      console.error("Erro ao buscar imóvel:", fetchError);
-      alert("Erro ao buscar imóvel: " + fetchError.message);
+// ABRIR MODAL DE EDIÇÃO
+window.editarImovel = async function(imovel) {
+  try {
+    console.log('✏️ Abrindo edição do imóvel:', imovel);
+    
+    // Preencher o modal de edição
+    document.getElementById('edit_id').value = imovel.id;
+    document.getElementById('edit_titulo').value = imovel.title || '';
+    document.getElementById('edit_descricao').value = imovel.description || '';
+    document.getElementById('edit_preco').value = imovel.price || '';
+    document.getElementById('edit_localizacao').value = imovel.location || '';
+    document.getElementById('edit_quartos').value = imovel.bedrooms || '';
+    document.getElementById('edit_banheiros').value = imovel.bathrooms || '';
+    document.getElementById('edit_area').value = imovel.area || '';
+    document.getElementById('edit_garagem').value = imovel.garage || '';
+    document.getElementById('edit_piscina').checked = imovel.pool || false;
+    
+    // Mostrar fotos atuais
+    const fotosContainer = document.getElementById('fotosAtuais');
+    if (imovel.image_urls && imovel.image_urls.length > 0) {
+      fotosContainer.innerHTML = `
+        <h6 class="mt-3 mb-2">Fotos Atuais (${imovel.image_urls.length})</h6>
+        <div class="row g-2">
+          ${imovel.image_urls.map((url, index) => `
+            <div class="col-6 col-md-4">
+              <div class="card">
+                <img src="${url}" class="card-img-top" style="height: 100px; object-fit: cover;" 
+                     onerror="this.src='${BANNER_PADRAO}'">
+                <div class="card-body p-2 text-center">
+                  <small class="text-muted d-block">Foto ${index + 1}</small>
+                  <button class="btn btn-danger btn-sm mt-1" onclick="excluirFotoImovel('${imovel.id}', '${url}', ${index})">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    } else {
+      fotosContainer.innerHTML = '<p class="text-muted">Nenhuma foto cadastrada</p>';
+    }
+    
+    // Abrir modal de edição
+    new bootstrap.Modal(document.getElementById('editarImovelModal')).show();
+    
+  } catch (error) {
+    console.error('❌ Erro ao abrir edição:', error);
+    alert("❌ Erro ao carregar dados do imóvel: " + error.message);
+  }
+};
+
+// EXCLUIR FOTO INDIVIDUAL DO IMÓVEL
+window.excluirFotoImovel = async function(imovelId, fotoUrl, index) {
+  try {
+    if (!confirm("🗑️ Tem certeza que quer excluir esta foto?")) return;
+    
+    // Buscar imóvel atual
+    const imoveis = await apiCall('/imoveis');
+    const imovel = imoveis.find(i => i.id === imovelId);
+    
+    if (!imovel || !imovel.image_urls) return;
+    
+    // Remover a foto específica
+    const novasFotos = imovel.image_urls.filter((url, i) => i !== index);
+    
+    // Atualizar imóvel
+    const dadosAtualizados = {
+      ...imovel,
+      image_urls: novasFotos
+    };
+    
+    await apiCall(`/imoveis/${imovelId}`, {
+      method: 'PUT',
+      body: JSON.stringify(dadosAtualizados)
+    });
+    
+    alert("✅ Foto excluída com sucesso!");
+    
+    // Recarregar dados e reabrir edição
+    const imoveisAtualizados = await apiCall('/imoveis');
+    const imovelAtualizado = imoveisAtualizados.find(i => i.id === imovelId);
+    await editarImovel(imovelAtualizado);
+    
+  } catch (error) {
+    console.error('❌ Erro ao excluir foto:', error);
+    alert("❌ Erro ao excluir foto: " + error.message);
+  }
+};
+
+// SALVAR EDIÇÃO DO IMÓVEL
+window.salvarEdicaoImovel = async function() {
+  try {
+    const id = document.getElementById('edit_id').value;
+    const titulo = document.getElementById('edit_titulo').value.trim();
+    
+    if (!titulo) {
+      alert("❌ Preencha o título do imóvel!");
       return;
     }
 
-    if (imovel?.image_urls?.length > 0) {
-      await excluirFotosStorage(imovel.image_urls);
-    }
-
-    const { error } = await supabase.from('items').delete().eq('id', id);
+    // Buscar imóvel atual para manter fotos existentes
+    const imoveis = await apiCall('/imoveis');
+    const imovelAtual = imoveis.find(i => i.id === id);
     
-    if (error) {
-      alert("Erro ao excluir: " + error.message);
-    } else {
-      alert("Imóvel excluído com sucesso!");
-      carregarImoveis();
-    }
-  } catch (error) {
-    console.error("Erro em excluirImovel:", error);
-    alert("Erro ao excluir imóvel. Verifique o console.");
-  }
-};
+    const fileInput = document.getElementById('edit_novas_fotos');
+    let novasFotosParaUpload = [];
 
-// SALVAR CONFIGURAÇÃO - CORRIGIDO
-window.salvarConfiguracao = async function() {
-  try {
-    const siteName = document.getElementById('cfg_siteName')?.value.trim() || "Lobianco Investimentos";
-    const phone = document.getElementById('cfg_phone')?.value.trim() || "(34) 99970-4808";
-    const email = document.getElementById('cfg_email')?.value.trim() || "contato@lobianco.com.br";
-    const address = document.getElementById('cfg_address')?.value.trim() || "Uberlândia - MG";
-    const whatsapp = document.getElementById('cfg_whatsapp')?.value.trim() || "https://wa.me/5534999704808";
-    const instagram = document.getElementById('cfg_instagram')?.value.trim() || "https://instagram.com/lobianco";
-    const facebook = document.getElementById('cfg_facebook')?.value.trim() || "https://facebook.com/lobianco";
-    const mainColor = document.getElementById('cfg_mainColor')?.value || "#0066CC";
-    const secondaryColor = document.getElementById('cfg_secondaryColor')?.value || "#003366";
-    const textColor = document.getElementById('cfg_textColor')?.value || "#333333";
-    const logoWidth = document.getElementById('cfg_logoWidth')?.value || "60px";
-    const logoHeight = document.getElementById('cfg_logoHeight')?.value || "60px";
-    
-    const logoFile = document.getElementById('cfg_logo')?.files[0];
-    const bannerFiles = document.getElementById('cfg_banners')?.files;
+    // Processar NOVAS fotos se existirem
+    if (fileInput?.files.length > 0) {
+      console.log(`📸 Processando ${fileInput.files.length} novas fotos...`);
+      
+      for (let i = 0; i < fileInput.files.length; i++) {
+        const file = fileInput.files[i];
+        
+        if (file.size > 10 * 1024 * 1024) {
+          alert(`❌ Arquivo ${file.name} é muito grande (máximo 10MB)`);
+          continue;
+        }
 
-    // CORREÇÃO: Buscar a configuração mais recente
-    const { data: configs } = await supabase
-      .from('site_config')
-      .select('*')
-      .order('updated_at', { ascending: false })
-      .limit(1);
-    
-    const configAtual = configs && configs.length > 0 ? configs[0] : null;
+        if (!file.type.startsWith('image/')) {
+          alert(`❌ Arquivo ${file.name} não é uma imagem válida`);
+          continue;
+        }
 
-    let logoUrl = configAtual?.logo_url || '';
-    let bannerUrls = configAtual?.banner_images || [];
-
-    // Upload do logo se fornecido
-    if (logoFile) {
-      const nomeLogo = "logo_" + Date.now() + ".png";
-      const { error } = await supabase.storage.from('public_assets').upload(`config/${nomeLogo}`, logoFile, { upsert: true });
-      if (!error) {
-        const { data } = supabase.storage.from('public_assets').getPublicUrl(`config/${nomeLogo}`);
-        logoUrl = data.publicUrl;
-      }
-    }
-
-    // Upload dos banners se fornecidos
-    if (bannerFiles && bannerFiles.length > 0) {
-      bannerUrls = [];
-      for (let file of bannerFiles) {
-        const ext = file.name.split('.').pop();
-        const nome = "banner_" + Date.now() + "_" + Math.random().toString(36).substring(2, 8) + "." + ext;
-        const { error } = await supabase.storage.from('public_assets').upload(`banners/${nome}`, file, { upsert: true });
-        if (!error) {
-          const { data } = supabase.storage.from('public_assets').getPublicUrl(`banners/${nome}`);
-          bannerUrls.push(data.publicUrl);
+        try {
+          const fileData = await readFileAsBase64(file);
+          const ext = file.name.split('.').pop() || 'jpg';
+          const filename = `imovel_edit_${Date.now()}_${i}.${ext}`;
+          
+          novasFotosParaUpload.push({
+            file: fileData,
+            filename: filename
+          });
+          
+          console.log(`✅ Nova foto preparada: ${filename}`);
+        } catch (error) {
+          console.error(`❌ Erro ao processar nova foto ${file.name}:`, error);
+          alert(`❌ Erro ao processar arquivo ${file.name}`);
         }
       }
     }
 
-    const configData = {
-      site_name: siteName,
-      phone: phone,
-      company_email: email,
-      company_address: address,
-      whatsapp_link: whatsapp,
-      instagram_link: instagram,
-      facebook_link: facebook,
-      main_color: mainColor,
-      secondary_color: secondaryColor,
-      text_color: textColor,
-      logo_url: logoUrl,
-      logo_width: logoWidth,
-      logo_height: logoHeight,
-      banner_images: bannerUrls.length > 0 ? bannerUrls : [],
-      updated_at: new Date().toISOString()
+    const dados = {
+      title: titulo,
+      description: document.getElementById('edit_descricao').value || '',
+      price: document.getElementById('edit_preco').value || '',
+      location: document.getElementById('edit_localizacao').value || '',
+      bedrooms: parseInt(document.getElementById('edit_quartos').value) || 0,
+      bathrooms: parseInt(document.getElementById('edit_banheiros').value) || 0,
+      area: document.getElementById('edit_area').value || null,
+      garage: parseInt(document.getElementById('edit_garagem').value) || 0,
+      pool: document.getElementById('edit_piscina').checked || false,
+      fotosExistentes: imovelAtual?.image_urls || [],
+      novasFotos: novasFotosParaUpload
     };
 
-    let error;
+    console.log('💾 Salvando edição do imóvel...', {
+      id: id,
+      titulo: dados.title,
+      novas_fotos: dados.novasFotos.length
+    });
+
+    const resultado = await apiCall(`/imoveis/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(dados)
+    });
+
+    alert(`✅ ${resultado.message || "Imóvel atualizado com sucesso!"}`);
     
-    // CORREÇÃO: Se já existe configuração, faz update, senão insert
-    if (configAtual && configAtual.id) {
-      ({ error } = await supabase.from('site_config').update(configData).eq('id', configAtual.id));
-    } else {
-      ({ error } = await supabase.from('site_config').insert(configData));
+    // Fechar modal e recarregar dados
+    const editarModal = bootstrap.Modal.getInstance(document.getElementById('editarImovelModal'));
+    if (editarModal) {
+      editarModal.hide();
+    }
+    
+    carregarImoveis();
+    
+    // Recarregar gestão para atualizar a lista
+    if (document.getElementById('gestaoModal').style.display !== 'none') {
+      await abrirGestao();
     }
 
-    if (error) {
-      alert("Erro ao salvar configuração: " + error.message);
-    } else {
-      alert("Configurações salvas com sucesso! A página será recarregada.");
-      location.reload();
-    }
   } catch (error) {
-    console.error("Erro em salvarConfiguracao:", error);
-    alert("Erro ao salvar configuração. Verifique o console.");
+    console.error('❌ Erro ao salvar edição:', error);
+    alert("❌ Erro ao atualizar imóvel: " + error.message);
   }
 };
 
-// ABRIR GESTÃO - CORRIGIDO
+// ========== GESTÃO ==========
+// Na função abrirGestao, atualize a parte que mostra os imóveis cadastrados:
 async function abrirGestao() {
   try {
-    const { data: imoveis, error } = await supabase.from('items').select('*');
-    
-    if (error) {
-      alert("Erro ao carregar imóveis: " + error.message);
-      return;
-    }
-
+    const imoveis = await apiCall('/imoveis');
     await preencherCamposConfiguracao();
 
     const tipos = [
@@ -434,6 +729,7 @@ async function abrirGestao() {
       el.innerHTML = `
         <h5 class="text-primary fw-bold mb-4">Cadastrar ${t.nome}</h5>
         <div class="border rounded p-4 bg-light mb-5">
+          <!-- Formulário de cadastro (mantido igual) -->
           <div class="row g-3">
             <div class="col-12"><input class="form-control form-control-lg" id="tit_${t.tipo}" placeholder="Título do imóvel *"></div>
             <div class="col-12"><textarea class="form-control" rows="4" id="desc_${t.tipo}" placeholder="Descrição completa"></textarea></div>
@@ -452,7 +748,7 @@ async function abrirGestao() {
         </div>
 
         <h5 class="mt-5 mb-3">Imóveis Cadastrados (${lista.length})</h5>
-        <div class="row row-cols-1 row-cols-md-3 g-4" id="lista-${t.tipo}">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
           ${lista.map(i => `
             <div class="col">
               <div class="card h-100 shadow">
@@ -460,8 +756,15 @@ async function abrirGestao() {
                 <div class="card-body d-flex flex-column">
                   <h6 class="fw-bold">${i.title}</h6>
                   <p class="text-muted small">${i.location || ''}</p>
-                  <p class="text-primary fw-bold">${i.price || ''}</p>
-                  <button class="btn btn-danger btn-sm mt-auto" onclick="excluirImovel('${i.id}')">Excluir</button>
+                  <p class="text-primary fw-bold">${i.price || 'Consulte'}</p>
+                  <div class="mt-auto">
+                    <button class="btn btn-warning btn-sm me-2" onclick="editarImovel(${JSON.stringify(i).replace(/"/g, '&quot;')})">
+                      <i class="fas fa-edit"></i> Editar
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="excluirImovel('${i.id}')">
+                      <i class="fas fa-trash"></i> Excluir
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -469,34 +772,16 @@ async function abrirGestao() {
         </div>`;
     });
 
-    // Adiciona evento para preencher configurações quando clicar na aba
-    document.querySelectorAll('a[data-bs-toggle="tab"]').forEach(tab => {
-      tab.addEventListener('shown.bs.tab', function (e) {
-        if (e.target.getAttribute('href') === '#tabConfig') {
-          preencherCamposConfiguracao();
-        }
-      });
-    });
-
     new bootstrap.Modal(document.getElementById('gestaoModal')).show();
   } catch (error) {
-    console.error("Erro em abrirGestao:", error);
-    alert("Erro ao abrir gestão. Verifique o console.");
+    alert("❌ Erro ao abrir gestão: " + error.message);
   }
 }
 
-// FUNÇÃO SEPARADA PARA PREENCHER CONFIGURAÇÕES - CORRIGIDA
+// FUNÇÃO PARA PREENCHER CONFIGURAÇÕES - COM VISUALIZAÇÃO DE BANNERS CORRIGIDA
 async function preencherCamposConfiguracao() {
   try {
-    // CORREÇÃO: Usar select().limit(1) em vez de maybeSingle()
-    const { data: configs } = await supabase
-      .from('site_config')
-      .select('*')
-      .order('updated_at', { ascending: false })
-      .limit(1);
-    
-    const config = configs && configs.length > 0 ? configs[0] : null;
-    
+    const config = await apiCall('/site-config');
     if (config) {
       const setValueIfExists = (id, value) => {
         const element = document.getElementById(id);
@@ -517,30 +802,179 @@ async function preencherCamposConfiguracao() {
       setValueIfExists('cfg_textColor', config.text_color);
       setValueIfExists('cfg_logoWidth', config.logo_width);
       setValueIfExists('cfg_logoHeight', config.logo_height);
+      
+      // Visualização da logo atual
+      const logoPreview = document.getElementById('logoPreview');
+      if (logoPreview && config.logo_url) {
+        logoPreview.innerHTML = `
+          <div class="card mt-2">
+            <div class="card-body text-center">
+              <img src="${config.logo_url}" style="max-width: 100px; max-height: 100px;" class="mb-2">
+              <br>
+              <button class="btn btn-danger btn-sm" onclick="excluirLogo()">
+                <i class="fas fa-trash"></i> Excluir Logo
+              </button>
+            </div>
+          </div>
+        `;
+      } else if (logoPreview) {
+        logoPreview.innerHTML = '<p class="text-muted small mt-2">Nenhuma logo configurada</p>';
+      }
+      
+      // Visualização dos banners atuais - CORRIGIDO
+      const bannersContainer = document.getElementById('bannersAtuais');
+      if (bannersContainer) {
+        if (config.banner_images && config.banner_images.length > 0) {
+          // Filtrar banner padrão da lista
+          const bannersCustomizados = config.banner_images.filter(url => url !== BANNER_PADRAO);
+          
+          if (bannersCustomizados.length > 0) {
+            bannersContainer.innerHTML = `
+              <h6 class="mt-4 mb-3 fw-bold">Banners Atuais (${bannersCustomizados.length})</h6>
+              <div class="row g-3">
+                ${bannersCustomizados.map((url, index) => `
+                  <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card shadow-sm">
+                      <img src="${url}" class="card-img-top" style="height: 150px; object-fit: cover;" 
+                           onerror="this.src='${BANNER_PADRAO}'" alt="Banner ${index + 1}">
+                      <div class="card-body text-center">
+                        <small class="text-muted d-block">Banner ${index + 1}</small>
+                        <button class="btn btn-outline-danger btn-sm mt-2" onclick="excluirBanner('${url}')">
+                          <i class="fas fa-trash"></i> Excluir
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+              <p class="text-muted small mt-3">
+                <i class="fas fa-info-circle"></i> Novos banners serão adicionados aos existentes
+              </p>
+            `;
+          } else {
+            bannersContainer.innerHTML = `
+              <div class="alert alert-info mt-3">
+                <i class="fas fa-info-circle"></i> Nenhum banner personalizado. 
+                Usando banner padrão do sistema.
+              </div>
+            `;
+          }
+        } else {
+          bannersContainer.innerHTML = `
+            <div class="alert alert-info mt-3">
+              <i class="fas fa-info-circle"></i> Nenhum banner configurado
+            </div>
+          `;
+        }
+      }
     }
   } catch (error) {
-    console.error("Erro ao preencher campos de configuração:", error);
+    console.error("Erro ao preencher configuração:", error);
   }
 }
 
-// INÍCIO
+// EXCLUIR LOGO
+window.excluirLogo = async function() {
+  try {
+    if (!confirm("🗑️ Tem certeza que quer remover a logo?")) return;
+    
+    const configAtual = await apiCall('/site-config');
+    const configData = {
+      ...configAtual,
+      logo_url: ""
+    };
+    
+    await apiCall('/site-config', {
+      method: 'POST',
+      body: JSON.stringify(configData)
+    });
+    
+    alert("✅ Logo removida com sucesso!");
+    await preencherCamposConfiguracao();
+    
+  } catch (error) {
+    console.error('❌ Erro ao excluir logo:', error);
+    alert("❌ Erro ao excluir logo: " + error.message);
+  }
+};
+// ========== GESTÃO DE MODAIS ==========
+function configurarModais() {
+  // Configurar modal de login
+  const loginModal = document.getElementById('loginModal');
+  if (loginModal) {
+    loginModal.addEventListener('show.bs.modal', function () {
+      this.setAttribute('aria-hidden', 'false');
+    });
+    
+    loginModal.addEventListener('hide.bs.modal', function () {
+      this.setAttribute('aria-hidden', 'true');
+    });
+  }
+
+  // Configurar modal de gestão
+  const gestaoModal = document.getElementById('gestaoModal');
+  if (gestaoModal) {
+    gestaoModal.addEventListener('show.bs.modal', function () {
+      this.setAttribute('aria-hidden', 'false');
+    });
+    
+    gestaoModal.addEventListener('hide.bs.modal', function () {
+      this.setAttribute('aria-hidden', 'true');
+    });
+  }
+}
+
+// ========== LOGIN E GESTÃO ==========
+async function fazerLogin() {
+  const email = document.getElementById('loginEmail')?.value.trim();
+  const senha = document.getElementById('loginPassword')?.value;
+  
+  if (!email || !senha) {
+    document.getElementById('loginError').textContent = "Preencha todos os campos!";
+    return false;
+  }
+
+  // Fechar modal de login corretamente
+  const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+  if (loginModal) {
+    loginModal.hide();
+  }
+
+  // Abrir gestão após um pequeno delay para o modal fechar
+  setTimeout(() => {
+    abrirGestao();
+  }, 300);
+
+  return true;
+}
+
+// ========== INICIALIZAÇÃO ATUALIZADA ==========
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('🚀 Iniciando Lobianco Investimentos...');
+  
+  // Configurar modais primeiro
+  configurarModais();
+  
+  // Carregar dados
   carregarConfig();
   carregarImoveis();
 
+  // Teste da API
+  apiCall('/health')
+    .then(data => console.log('✅ API conectada:', data))
+    .catch(error => console.error('❌ Erro na API:', error));
+
+  // Event listeners
   document.addEventListener('click', (e) => {
     if (e.target.closest('#openGestao')) {
-      new bootstrap.Modal(document.getElementById('loginModal')).show();
+      // Abrir modal de login
+      const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+      loginModal.show();
     }
+    
     if (e.target.id === 'btnLogin' || e.target.closest('#btnLogin')) {
-      const email = document.getElementById('loginEmail')?.value.trim();
-      const senha = document.getElementById('loginPassword')?.value;
-      if (email && senha) {
-        bootstrap.Modal.getInstance(document.getElementById('loginModal'))?.hide();
-        abrirGestao();
-      } else {
-        document.getElementById('loginError').textContent = "Preencha os campos!";
-      }
+      e.preventDefault();
+      fazerLogin();
     }
   });
 });
