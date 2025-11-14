@@ -38,9 +38,15 @@ app.get('/api/health', (req, res) => {
 app.get('/api/site-config', async (req, res) => {
   try {
     console.log('📋 Buscando configuração do site...');
-    const { data, error } = await supabase.from('site_config').select('*').single();
     
-    if (error && error.code !== 'PGRST116') {
+    // Buscar TODAS as configurações e pegar a mais recente
+    const { data, error } = await supabase
+      .from('site_config')
+      .select('*')
+      .order('updated_at', { ascending: false })
+      .limit(1);
+    
+    if (error) {
       console.error('❌ Erro ao buscar site-config:', error);
       return res.status(500).json({ error: error.message });
     }
@@ -62,8 +68,12 @@ app.get('/api/site-config', async (req, res) => {
       logo_height: "60px"
     };
     
-    console.log('✅ Configuração carregada:', data || defaultConfig);
-    res.json(data || defaultConfig);
+    // Pegar a configuração mais recente ou usar padrão
+    const config = data && data.length > 0 ? data[0] : defaultConfig;
+    
+    console.log('✅ Configuração carregada:', config);
+    res.json(config);
+    
   } catch (error) {
     console.error('❌ Erro em site-config:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
@@ -73,13 +83,46 @@ app.get('/api/site-config', async (req, res) => {
 app.post('/api/site-config', async (req, res) => {
   try {
     console.log('💾 Salvando configuração do site...', req.body);
-    const { data, error } = await supabase.from('site_config').upsert(req.body).select().single();
+    
+    // Primeiro: Buscar configuração existente mais recente
+    const { data: existingConfigs, error: fetchError } = await supabase
+      .from('site_config')
+      .select('*')
+      .order('updated_at', { ascending: false })
+      .limit(1);
+    
+    if (fetchError) {
+      console.error('❌ Erro ao buscar configuração existente:', fetchError);
+    }
+    
+    let configData = { ...req.body };
+    
+    // Se existe configuração anterior, manter o ID para evitar múltiplas linhas
+    if (existingConfigs && existingConfigs.length > 0) {
+      configData.id = existingConfigs[0].id;
+      console.log('🔄 Atualizando configuração existente ID:', configData.id);
+    } else {
+      console.log('🆕 Criando nova configuração');
+    }
+    
+    // Adicionar timestamp de atualização
+    configData.updated_at = new Date().toISOString();
+    
+    // Fazer UPSERT (update se existe, insert se não existe)
+    const { data, error } = await supabase
+      .from('site_config')
+      .upsert(configData)
+      .select()
+      .single();
+      
     if (error) {
       console.error('❌ Erro ao salvar site-config:', error);
       return res.status(500).json({ error: error.message });
     }
+    
     console.log('✅ Configuração salva com sucesso');
     res.json({ success: true, data });
+    
   } catch (error) {
     console.error('❌ Erro em site-config POST:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
@@ -200,6 +243,86 @@ app.post('/api/upload-banners', async (req, res) => {
       error: 'Erro interno do servidor',
       details: error.message 
     });
+  }
+});
+
+
+// ========== LIMPAR CONFIGURAÇÕES DUPLICADAS ==========
+app.delete('/api/cleanup-config', async (req, res) => {
+  try {
+    console.log('🧹 Limpando configurações duplicadas...');
+    
+    // Buscar todas as configurações
+    const { data: allConfigs, error: fetchError } = await supabase
+      .from('site_config')
+      .select('*')
+      .order('updated_at', { ascending: false });
+    
+    if (fetchError) {
+      console.error('❌ Erro ao buscar configurações:', fetchError);
+      return res.status(500).json({ error: fetchError.message });
+    }
+    
+    if (!allConfigs || allConfigs.length <= 1) {
+      console.log('✅ Nenhuma duplicata para limpar');
+      return res.json({ message: 'Nenhuma duplicata encontrada' });
+    }
+    
+    // Manter apenas a mais recente
+    const latestConfig = allConfigs[0];
+    const duplicates = allConfigs.slice(1);
+    
+    console.log(`🗑️ Encontradas ${duplicates.length} configurações duplicadas`);
+    
+    // Excluir duplicatas
+    const idsToDelete = duplicates.map(config => config.id);
+    const { error: deleteError } = await supabase
+      .from('site_config')
+      .delete()
+      .in('id', idsToDelete);
+    
+    if (deleteError) {
+      console.error('❌ Erro ao excluir duplicatas:', deleteError);
+      return res.status(500).json({ error: deleteError.message });
+    }
+    
+    console.log('✅ Duplicatas removidas com sucesso');
+    res.json({ 
+      success: true, 
+      message: `Removidas ${duplicates.length} configurações duplicadas`,
+      kept: latestConfig 
+    });
+    
+  } catch (error) {
+    console.error('❌ Erro em cleanup-config:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// ========== VER TODAS AS CONFIGURAÇÕES (DEBUG) ==========
+app.get('/api/debug-configs', async (req, res) => {
+  try {
+    console.log('🔍 Verificando todas as configurações...');
+    
+    const { data, error } = await supabase
+      .from('site_config')
+      .select('*')
+      .order('updated_at', { ascending: false });
+    
+    if (error) {
+      console.error('❌ Erro ao buscar configurações:', error);
+      return res.status(500).json({ error: error.message });
+    }
+    
+    console.log(`📊 Total de configurações: ${data?.length || 0}`);
+    res.json({ 
+      total: data?.length || 0,
+      configs: data || [] 
+    });
+    
+  } catch (error) {
+    console.error('❌ Erro em debug-configs:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 

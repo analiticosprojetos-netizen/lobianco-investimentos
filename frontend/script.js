@@ -143,10 +143,21 @@ function aplicarConfigPadrao() {
 }
 
 // SALVAR CONFIGURAÇÃO COMPLETA - CORRIGIDO
-window.salvarConfiguracao = async function() {
+ window.salvarConfiguracao = async function() {
   try {
     console.log('💾 Iniciando salvamento da configuração...');
     
+    // PRIMEIRO: Buscar configuração atual para preservar dados existentes
+    let configAtual;
+    try {
+      configAtual = await apiCall('/site-config');
+      console.log('📋 Configuração atual carregada:', configAtual);
+    } catch (error) {
+      console.log('ℹ️ Criando nova configuração');
+      configAtual = {};
+    }
+    
+    // Dados do formulário
     const siteName = document.getElementById('cfg_siteName')?.value.trim() || "Lobianco Investimentos";
     const phone = document.getElementById('cfg_phone')?.value.trim() || "(34) 99970-4808";
     const mainColor = document.getElementById('cfg_mainColor')?.value || "#0066CC";
@@ -163,56 +174,110 @@ window.salvarConfiguracao = async function() {
     const logoFile = document.getElementById('cfg_logo')?.files[0];
     const bannerFiles = document.getElementById('cfg_banners')?.files;
     
-    let logoUrl = '';
-    let bannerUrls = [];
+    let logoUrl = configAtual.logo_url || '';
+    let bannerUrls = configAtual.banner_images || [];
 
-    // Upload da logo
+    // 1. UPLOAD DA LOGO (se houver nova logo)
     if (logoFile) {
-      console.log('📤 Fazendo upload da logo...');
-      logoUrl = await fazerUploadArquivo(logoFile, 'logo');
-      if (!logoUrl) throw new Error('Falha no upload da logo');
-      console.log('✅ Logo enviada:', logoUrl);
+      console.log('📤 Fazendo upload da NOVA logo...');
+      try {
+        logoUrl = await fazerUploadArquivo(logoFile, 'logo');
+        console.log('✅ Nova logo enviada:', logoUrl);
+      } catch (error) {
+        console.error('❌ Erro no upload da logo:', error);
+        alert("❌ Erro ao fazer upload da logo: " + error.message);
+        // Mantém a logo existente em caso de erro
+      }
     }
+    // Se não há nova logo, mantém a existente (já definida acima)
 
-    // Upload dos banners
+    // 2. UPLOAD DE NOVOS BANNERS (adicionar aos existentes)
     if (bannerFiles && bannerFiles.length > 0) {
-      console.log(`📤📤 Fazendo upload de ${bannerFiles.length} banners...`);
-      const uploadResult = await fazerUploadMultiplo(bannerFiles, 'banners');
-      if (uploadResult && uploadResult.urls) {
-        bannerUrls = uploadResult.urls;
-        console.log('✅ Banners enviados:', bannerUrls);
-        alert(`✅ ${uploadResult.message}`);
-      } else {
-        throw new Error('Falha no upload dos banners');
+      console.log(`📤📤 Fazendo upload de ${bannerFiles.length} NOVOS banners...`);
+      try {
+        const uploadResult = await fazerUploadMultiplo(bannerFiles, 'banners');
+        if (uploadResult && uploadResult.urls && uploadResult.urls.length > 0) {
+          // ADICIONAR novos banners aos existentes (não substituir!)
+          bannerUrls = [...bannerUrls, ...uploadResult.urls];
+          console.log('✅ Novos banners adicionados. Total:', bannerUrls.length);
+          
+          // Remover banner padrão se houver banners customizados
+          if (bannerUrls.includes(BANNER_PADRAO) && bannerUrls.length > 1) {
+            bannerUrls = bannerUrls.filter(url => url !== BANNER_PADRAO);
+            console.log('🔄 Banner padrão removido (há banners customizados)');
+          }
+          
+          alert(`✅ ${uploadResult.message}\nTotal de banners: ${bannerUrls.length}`);
+        } else {
+          console.warn('⚠️ Nenhum banner novo foi enviado com sucesso');
+        }
+      } catch (error) {
+        console.error('❌ Erro no upload de banners:', error);
+        alert("❌ Erro ao fazer upload dos banners: " + error.message);
+        // Continua com os banners existentes em caso de erro
       }
     }
 
-    // Salvar configuração
+    // 3. GARANTIR que há pelo menos um banner
+    if (bannerUrls.length === 0) {
+      bannerUrls = [BANNER_PADRAO];
+      console.log('🖼️ Nenhum banner encontrado, usando banner padrão');
+    }
+
+    // 4. PREPARAR DADOS PARA SALVAR (mantendo todos os dados existentes)
     const configData = {
+      // Manter ID existente se houver (para evitar duplicatas)
+      ...(configAtual.id && { id: configAtual.id }),
+      
+      // Dados básicos (novos ou atualizados)
       site_name: siteName,
       phone: phone,
       main_color: mainColor,
       secondary_color: secondaryColor,
       text_color: textColor,
+      
+      // Mídia
       logo_url: logoUrl,
       logo_width: logoWidth,
       logo_height: logoHeight,
       banner_images: bannerUrls,
+      
+      // Contatos
       company_email: email,
       company_address: address,
       whatsapp_link: whatsapp,
       instagram_link: instagram,
-      facebook_link: facebook
+      facebook_link: facebook,
+      
+      // Timestamp de atualização
+      updated_at: new Date().toISOString()
     };
 
-    console.log('💾 Salvando configuração no banco...', configData);
-    await apiCall('/site-config', {
+    console.log('💾 Salvando configuração no banco...', {
+      site_name: configData.site_name,
+      banners_count: configData.banner_images.length,
+      logo: configData.logo_url ? 'Sim' : 'Não',
+      tem_id: !!configData.id
+    });
+
+    const resultado = await apiCall('/site-config', {
       method: 'POST',
       body: JSON.stringify(configData)
     });
 
-    alert("✅ Configurações salvas com sucesso! A página será recarregada.");
-    location.reload();
+    alert("✅ Configurações salvas com sucesso!\nBanners ativos: " + bannerUrls.length);
+    
+    // Limpar campos de arquivo após salvar
+    document.getElementById('cfg_logo').value = '';
+    document.getElementById('cfg_banners').value = '';
+    
+    // Recarregar a configuração para aplicar as mudanças
+    await carregarConfig();
+    
+    // Atualizar a visualização no modal de gestão
+    await preencherCamposConfiguracao();
+    
+    console.log('🎯 Configuração salva com sucesso!');
 
   } catch (error) {
     console.error('❌ Erro ao salvar configuração:', error);
@@ -778,7 +843,7 @@ async function abrirGestao() {
   }
 }
 
-// FUNÇÃO PARA PREENCHER CONFIGURAÇÕES - COM VISUALIZAÇÃO DE BANNERS CORRIGIDA
+// FUNÇÃO PARA PREENCHER CONFIGURAÇÕES - COM BOTÕES CORRIGIDOS
 async function preencherCamposConfiguracao() {
   try {
     const config = await apiCall('/site-config');
@@ -805,20 +870,23 @@ async function preencherCamposConfiguracao() {
       
       // Visualização da logo atual
       const logoPreview = document.getElementById('logoPreview');
-      if (logoPreview && config.logo_url) {
-        logoPreview.innerHTML = `
-          <div class="card mt-2">
-            <div class="card-body text-center">
-              <img src="${config.logo_url}" style="max-width: 100px; max-height: 100px;" class="mb-2">
-              <br>
-              <button class="btn btn-danger btn-sm" onclick="excluirLogo()">
-                <i class="fas fa-trash"></i> Excluir Logo
-              </button>
+      if (logoPreview) {
+        if (config.logo_url) {
+          logoPreview.innerHTML = `
+            <div class="card mt-2">
+              <div class="card-body text-center">
+                <img src="${config.logo_url}" style="max-width: 100px; max-height: 100px;" class="mb-2" 
+                     onerror="this.style.display='none'">
+                <br>
+                <button class="btn btn-danger btn-sm" onclick="excluirLogo()">
+                  <i class="fas fa-trash"></i> Excluir Logo
+                </button>
+              </div>
             </div>
-          </div>
-        `;
-      } else if (logoPreview) {
-        logoPreview.innerHTML = '<p class="text-muted small mt-2">Nenhuma logo configurada</p>';
+          `;
+        } else {
+          logoPreview.innerHTML = '<p class="text-muted small mt-2">Nenhuma logo configurada</p>';
+        }
       }
       
       // Visualização dos banners atuais - CORRIGIDO
@@ -839,7 +907,7 @@ async function preencherCamposConfiguracao() {
                            onerror="this.src='${BANNER_PADRAO}'" alt="Banner ${index + 1}">
                       <div class="card-body text-center">
                         <small class="text-muted d-block">Banner ${index + 1}</small>
-                        <button class="btn btn-outline-danger btn-sm mt-2" onclick="excluirBanner('${url}')">
+                        <button class="btn btn-outline-danger btn-sm mt-2" onclick="window.excluirBanner('${url}')">
                           <i class="fas fa-trash"></i> Excluir
                         </button>
                       </div>
@@ -872,6 +940,97 @@ async function preencherCamposConfiguracao() {
     console.error("Erro ao preencher configuração:", error);
   }
 }
+// ========== FUNÇÕES DE EXCLUSÃO DE BANNERS ==========
+
+// EXCLUIR BANNER INDIVIDUAL - CORRIGIDO
+window.excluirBanner = async function(bannerUrl) {
+  try {
+    console.log('🗑️ Tentando excluir banner:', bannerUrl);
+    
+    if (!confirm("🗑️ Tem certeza que quer excluir este banner?")) {
+      console.log('❌ Exclusão cancelada pelo usuário');
+      return;
+    }
+    
+    // Buscar configuração atual
+    const configAtual = await apiCall('/site-config');
+    console.log('📋 Configuração atual:', configAtual);
+    
+    if (!configAtual || !configAtual.banner_images) {
+      alert("❌ Nenhum banner encontrado para excluir");
+      return;
+    }
+    
+    // Filtrar o banner a ser excluído
+    const novosBanners = configAtual.banner_images.filter(url => {
+      const shouldKeep = url !== bannerUrl;
+      console.log(`🔍 Comparando: ${url} === ${bannerUrl} ? ${!shouldKeep}`);
+      return shouldKeep;
+    });
+    
+    console.log(`📊 Banner removido. Antes: ${configAtual.banner_images.length}, Depois: ${novosBanners.length}`);
+    
+    // Se não sobrou nenhum banner, adicionar o padrão
+    if (novosBanners.length === 0) {
+      novosBanners.push(BANNER_PADRAO);
+      console.log('🖼️ Adicionando banner padrão');
+    }
+    
+    // Atualizar configuração
+    const configData = {
+      ...configAtual,
+      banner_images: novosBanners
+    };
+    
+    console.log('💾 Salvando configuração atualizada...');
+    await apiCall('/site-config', {
+      method: 'POST',
+      body: JSON.stringify(configData)
+    });
+    
+    alert("✅ Banner excluído com sucesso!");
+    console.log('✅ Banner excluído com sucesso');
+    
+    // Recarregar configuração
+    await carregarConfig();
+    
+    // Atualizar visualização na gestão
+    await preencherCamposConfiguracao();
+    
+  } catch (error) {
+    console.error('❌ Erro ao excluir banner:', error);
+    alert("❌ Erro ao excluir banner: " + error.message);
+  }
+};
+
+// EXCLUIR LOGO - CORRIGIDO
+window.excluirLogo = async function() {
+  try {
+    console.log('🗑️ Tentando excluir logo...');
+    
+    if (!confirm("🗑️ Tem certeza que quer remover a logo?")) {
+      return;
+    }
+    
+    const configAtual = await apiCall('/site-config');
+    const configData = {
+      ...configAtual,
+      logo_url: ""
+    };
+    
+    await apiCall('/site-config', {
+      method: 'POST',
+      body: JSON.stringify(configData)
+    });
+    
+    alert("✅ Logo removida com sucesso!");
+    await preencherCamposConfiguracao();
+    
+  } catch (error) {
+    console.error('❌ Erro ao excluir logo:', error);
+    alert("❌ Erro ao excluir logo: " + error.message);
+  }
+};
 
 // EXCLUIR LOGO
 window.excluirLogo = async function() {
