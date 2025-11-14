@@ -1,330 +1,259 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
 
 :root { 
-        --azul: #0066CC; 
-        --azul-secundario: #003366;
-        --cor-texto: #333333;
-        --cor-fundo: #f8f9fa;
-    }
+    --azul: #0066CC; 
+    --azul-secundario: #003366;
+    --cor-texto: #333333;
+    --cor-fundo: #f8f9fa;
+}
+
+body { 
+    font-family: 'Poppins', sans-serif; 
+    background: var(--cor-fundo); 
+    margin: 0; 
+    color: var(--cor-texto);
+}
+
+.navbar { 
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1); 
+}
+
+.nav-link { 
+    font-weight: 600; 
+    color: #333 !important; 
+}
+
+.nav-link:hover { 
+    color: var(--azul) !important; 
+}
+
+/* CARROSSEL RESPONSIVO */
+.carousel-item img { 
+    height: 70vh; 
+    object-fit: cover; 
+}
+
+.carousel-caption { 
+    right: 10%; 
+    bottom: 20%; 
+    text-align: right; 
+}
+
+.carousel-caption h1 { 
+    font-size: 3.5rem; 
+    font-weight: 800; 
+    text-shadow: 4px 4px 15px rgba(0,0,0,0.8); 
+    margin-bottom: 1rem;
+}
+
+.carousel-caption p { 
+    font-size: 1.8rem; 
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
+    margin-bottom: 2rem;
+}
+
+.tag { 
+    background: var(--azul); 
+    padding: 12px 30px; 
+    border-radius: 50px; 
+    font-weight: bold; 
+    font-size: 1.2rem;
+}
+
+/* SOCIAL BAR RESPONSIVA */
+.social-bar { 
+    position: fixed; 
+    left: 0; 
+    top: 50%; 
+    transform: translateY(-50%); 
+    z-index: 9999; 
+    padding-left: 0.5rem;
+}
+
+.social-bar a { 
+    width: 50px; 
+    height: 50px; 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    color: white; 
+    font-size: 1.3rem; 
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4); 
+    transition: 0.3s; 
+    margin-bottom: 0.8rem;
+}
+
+.social-bar a:hover { 
+    transform: scale(1.3); 
+}
+
+.social-bar .whatsapp { background: #25D366; }
+.social-bar .instagram { 
+    background: radial-gradient(circle at 30% 107%, #fdf497, #fd5949, #d6249f, #285AEB); 
+}
+.social-bar .facebook { background: #1877F2; }
+
+/* CARDS RESPONSIVOS */
+.property-card { 
+    transition: 0.3s; 
+    height: 100%;
+}
+
+.property-card:hover { 
+    transform: translateY(-10px); 
+    box-shadow: 0 15px 30px rgba(0,0,0,0.2); 
+}
+
+.card-img-top {
+    height: 250px;
+    object-fit: cover;
+}
+
+footer { 
+    background: #000; 
+    color: #ccc; 
+    padding: 50px 0 30px; 
+}
+
+#openGestao { 
+    color: #666; 
+    font-size: 0.9rem; 
+    text-decoration: none; 
+    margin-top: 20px; 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 8px; 
+}
+
+#openGestao:hover { 
+    color: white; 
+    text-decoration: underline; 
+}
+
+#openGestao i { 
+    font-size: 1.1rem; 
+}
+
+html { scroll-behavior: smooth; }
+.tab-pane { min-height: 400px; }
+section { padding: 4rem 0; }
+
+/* ===== RESPONSIVIDADE ===== */
+@media (max-width: 992px) {
+    .carousel-caption h1 { font-size: 2.8rem; }
+    .carousel-caption p { font-size: 1.4rem; }
+    .tag { padding: 10px 25px; font-size: 1.1rem; }
+    .social-bar a { width: 45px; height: 45px; font-size: 1.2rem; }
+    section { padding: 3rem 0; }
+    .card-img-top { height: 200px; }
+}
+
+@media (max-width: 768px) {
+    .carousel-caption { right: 5% !important; bottom: 15%; text-align: center !important; }
+    .carousel-caption h1 { font-size: 2.2rem; margin-bottom: 0.5rem; }
+    .carousel-caption p { font-size: 1.2rem; margin-bottom: 1.5rem; }
+    .carousel-item img { height: 50vh; }
+    .tag { padding: 8px 20px; font-size: 1rem; }
     
-    body { 
-        font-family: 'Poppins', sans-serif; 
-        background: var(--cor-fundo); 
-        margin: 0; 
-        color: var(--cor-texto);
+    .social-bar {
+        position: relative;
+        top: auto;
+        transform: none;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(0,0,0,0.1);
     }
-    
-    .navbar { 
-        box-shadow: 0 4px 20px rgba(0,0,0,0.1); 
+    .social-bar a { margin-bottom: 0; width: 40px; height: 40px; font-size: 1rem; }
+    #siteLogo { height: 40px !important; }
+    section { padding: 2rem 0; }
+    .card-img-top { height: 180px; }
+    footer { padding: 30px 0 20px; }
+    #footerPhone { font-size: 1.1rem !important; }
+}
+
+@media (max-width: 576px) {
+    .carousel-caption h1 { font-size: 1.8rem; }
+    .carousel-caption p { font-size: 1rem; }
+    .carousel-item img { height: 40vh; }
+    .tag { padding: 6px 15px; font-size: 0.9rem; }
+    .social-bar a { width: 35px; height: 35px; font-size: 0.9rem; }
+    #siteLogo { height: 35px !important; }
+    .card-img-top { height: 160px; }
+    .row-cols-md-3 { grid-template-columns: repeat(1, 1fr) !important; }
+    section h2 { font-size: 1.8rem; }
+    #footerPhone { font-size: 1rem !important; }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+    .carousel-item img { height: 100vh; }
+    .carousel-caption { bottom: 10%; }
+    .social-bar { top: 10px; transform: none; }
+}
+
+.text-primary { color: var(--azul) !important; }
+.btn-primary { 
+    background-color: var(--azul) !important; 
+    border-color: var(--azul) !important; 
+}
+.btn-primary:hover { 
+    background-color: var(--azul-secundario) !important; 
+    border-color: var(--azul-secundario) !important; 
+}
+
+/* ============================================================= */
+/* ===== CORREÇÃO 100% DEFINITIVA DO NOME NO HEADER MOBILE ===== */
+/* ============================================================= */
+
+@media (max-width: 768px) {
+    .navbar-brand {
+        font-size: 1.35rem !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: calc(100vw - 130px);   /* ajusta dinamicamente em qualquer celular */
+        padding-right: 8px;
     }
-    
-    .nav-link { 
-        font-weight: 600; 
-        color: #333 !important; 
+    .navbar-brand img {
+        max-width: 42px !important;
+        height: auto !important;
     }
-    
-    .nav-link:hover { 
-        color: var(--azul) !important; 
+}
+
+@media (max-width: 576px) {
+    .navbar-brand {
+        font-size: 1.2rem !important;
+        max-width: calc(100vw - 120px);
     }
-    
-    /* CARROSSEL RESPONSIVO */
-    .carousel-item img { 
-        height: 70vh; 
-        object-fit: cover; 
+    .navbar-brand img {
+        max-width: 38px !important;
     }
-    
-    .carousel-caption { 
-        right: 10%; 
-        bottom: 20%; 
-        text-align: right; 
+}
+
+@media (max-width: 400px) {
+    .navbar-brand {
+        font-size: 1.15rem !important;
+        max-width: calc(100vw - 110px);
     }
-    
-    .carousel-caption h1 { 
-        font-size: 3.5rem; 
-        font-weight: 800; 
-        text-shadow: 4px 4px 15px rgba(0,0,0,0.8); 
-        margin-bottom: 1rem;
+    .navbar-brand img {
+        max-width: 35px !important;
     }
-    
-    .carousel-caption p { 
-        font-size: 1.8rem; 
-        text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
-        margin-bottom: 2rem;
+}
+
+/* VERSÃO ULTRA ELEGANTE (opcional – mostra só "Lobianco" em celular) */
+/* Descomente as linhas abaixo se quiser usar essa versão ainda mais bonita */
+/*
+@media (max-width: 767px) {
+    .navbar-brand::after {
+        content: "Lobianco";
+        margin-left: 8px;
+        color: inherit;
+        font-weight: 600;
     }
-    
-    .tag { 
-        background: var(--azul); 
-        padding: 12px 30px; 
-        border-radius: 50px; 
-        font-weight: bold; 
-        font-size: 1.2rem;
+    .navbar-brand > *:not(img) {
+        display: none !important;
     }
-    
-    /* SOCIAL BAR RESPONSIVA */
-    .social-bar { 
-        position: fixed; 
-        left: 0; 
-        top: 50%; 
-        transform: translateY(-50%); 
-        z-index: 9999; 
-        padding-left: 0.5rem;
-    }
-    
-    .social-bar a { 
-        width: 50px; 
-        height: 50px; 
-        border-radius: 50%; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        color: white; 
-        font-size: 1.3rem; 
-        box-shadow: 0 8px 25px rgba(0,0,0,0.4); 
-        transition: 0.3s; 
-        margin-bottom: 0.8rem;
-    }
-    
-    .social-bar a:hover { 
-        transform: scale(1.3); 
-    }
-    
-    .social-bar .whatsapp { background: #25D366; }
-    .social-bar .instagram { 
-        background: radial-gradient(circle at 30% 107%, #fdf497, #fd5949, #d6249f, #285AEB); 
-    }
-    .social-bar .facebook { background: #1877F2; }
-    
-    /* CARDS RESPONSIVOS */
-    .property-card { 
-        transition: 0.3s; 
-        height: 100%;
-    }
-    
-    .property-card:hover { 
-        transform: translateY(-10px); 
-        box-shadow: 0 15px 30px rgba(0,0,0,0.2); 
-    }
-    
-    .card-img-top {
-        height: 250px;
-        object-fit: cover;
-    }
-    
-    footer { 
-        background: #000; 
-        color: #ccc; 
-        padding: 50px 0 30px; 
-    }
-    
-    #openGestao { 
-        color: #666; 
-        font-size: 0.9rem; 
-        text-decoration: none; 
-        margin-top: 20px; 
-        display: inline-flex; 
-        align-items: center; 
-        gap: 8px; 
-    }
-    
-    #openGestao:hover { 
-        color: white; 
-        text-decoration: underline; 
-    }
-    
-    #openGestao i { 
-        font-size: 1.1rem; 
-    }
-    
-    /* Smooth scroll */
-    html { 
-        scroll-behavior: smooth; 
-    }
-    
-    /* Correção para abas */
-    .tab-pane { 
-        min-height: 400px; 
-    }
-    
-    /* SEÇÕES */
-    section {
-        padding: 4rem 0;
-    }
-    
-    /* ===== RESPONSIVIDADE ===== */
-    
-    /* TABLETS */
-    @media (max-width: 992px) {
-        .carousel-caption h1 { 
-            font-size: 2.8rem; 
-        }
-        
-        .carousel-caption p { 
-            font-size: 1.4rem; 
-        }
-        
-        .tag {
-            padding: 10px 25px;
-            font-size: 1.1rem;
-        }
-        
-        .social-bar a {
-            width: 45px;
-            height: 45px;
-            font-size: 1.2rem;
-        }
-        
-        section {
-            padding: 3rem 0;
-        }
-        
-        .card-img-top {
-            height: 200px;
-        }
-    }
-    
-    /* CELULARES GRANDES */
-    @media (max-width: 768px) {
-        .carousel-caption {
-            right: 5% !important;
-            bottom: 15%;
-            text-align: center !important;
-        }
-        
-        .carousel-caption h1 { 
-            font-size: 2.2rem; 
-            margin-bottom: 0.5rem;
-        }
-        
-        .carousel-caption p { 
-            font-size: 1.2rem; 
-            margin-bottom: 1.5rem;
-        }
-        
-        .carousel-item img {
-            height: 50vh;
-        }
-        
-        .tag {
-            padding: 8px 20px;
-            font-size: 1rem;
-        }
-        
-        .social-bar {
-            position: relative;
-            top: auto;
-            transform: none;
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            padding: 1rem;
-            background: rgba(0,0,0,0.1);
-        }
-        
-        .social-bar a {
-            margin-bottom: 0;
-            width: 40px;
-            height: 40px;
-            font-size: 1rem;
-        }
-        
-        .navbar-brand .fs-3 {
-            font-size: 1.5rem !important;
-        }
-        
-        #siteLogo {
-            height: 40px !important;
-        }
-        
-        section {
-            padding: 2rem 0;
-        }
-        
-        .card-img-top {
-            height: 180px;
-        }
-        
-        footer {
-            padding: 30px 0 20px;
-        }
-        
-        #footerPhone {
-            font-size: 1.1rem !important;
-        }
-    }
-    
-    /* CELULARES PEQUENOS */
-    @media (max-width: 576px) {
-        .carousel-caption h1 { 
-            font-size: 1.8rem; 
-        }
-        
-        .carousel-caption p { 
-            font-size: 1rem; 
-        }
-        
-        .carousel-item img {
-            height: 40vh;
-        }
-        
-        .tag {
-            padding: 6px 15px;
-            font-size: 0.9rem;
-        }
-        
-        .social-bar a {
-            width: 35px;
-            height: 35px;
-            font-size: 0.9rem;
-        }
-        
-        .navbar-brand .fs-3 {
-            font-size: 1.3rem !important;
-        }
-        
-        #siteLogo {
-            height: 35px !important;
-        }
-        
-        .card-img-top {
-            height: 160px;
-        }
-        
-        .row-cols-md-3 {
-            grid-template-columns: repeat(1, 1fr) !important;
-        }
-        
-        section h2 {
-            font-size: 1.8rem;
-        }
-        
-        #footerPhone {
-            font-size: 1rem !important;
-        }
-    }
-    
-    /* MODO LANDSCAPE EM CELULARES */
-    @media (max-height: 500px) and (orientation: landscape) {
-        .carousel-item img {
-            height: 100vh;
-        }
-        
-        .carousel-caption {
-            bottom: 10%;
-        }
-        
-        .social-bar {
-            top: 10px;
-            transform: none;
-        }
-    }
-    
-    /* CORES DINÂMICAS */
-    .text-primary { color: var(--azul) !important; }
-    .btn-primary { 
-        background-color: var(--azul) !important; 
-        border-color: var(--azul) !important; 
-    }
-    .btn-primary:hover { 
-        background-color: var(--azul-secundario) !important; 
-        border-color: var(--azul-secundario) !important; 
-    }
+}
+*/
