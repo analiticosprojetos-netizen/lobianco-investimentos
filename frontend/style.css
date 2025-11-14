@@ -1,4 +1,4 @@
- @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
 
 :root { 
   --azul: #0066CC; 
@@ -17,6 +17,7 @@ body {
   color: var(--cor-texto);
   margin: 0;
   padding: 0;
+  scroll-behavior: smooth; 
 }
 
 /* ===== HEADER & NAVBAR ===== */
@@ -41,10 +42,6 @@ body {
 }
 
 /* ===== CARROSSEL HERO ===== */
-.hero-carousel { 
-  height: 70vh; 
-}
-
 .carousel-item img { 
   height: 70vh; 
   object-fit: cover;
@@ -55,6 +52,7 @@ body {
   left: auto;
   bottom: 20%;
   text-align: right;
+  max-width: 50%; 
 }
 
 .carousel-caption h1 {
@@ -77,6 +75,7 @@ body {
   font-weight: bold;
   font-size: 1.5rem;
   display: inline-block;
+  color: var(--branco);
 }
 
 /* ===== SOCIAL BAR ===== */
@@ -105,7 +104,7 @@ body {
 }
 
 .social-bar a:hover {
-  transform: scale(1.3);
+  transform: scale(1.1); 
   text-decoration: none;
 }
 
@@ -236,11 +235,101 @@ footer {
   box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important;
 }
 
-/* ===== RESPONSIVIDADE ===== */
-@media (max-width: 768px) {
+/* ===== RESPONSIVIDADE (Correções aplicadas) ===== */
+
+/* Telas pequenas (sm - abaixo de 576px) */
+@media (max-width: 575.98px) {
+  
+  /* Carrossel */
+  .carousel-caption {
+    right: 5% !important;
+    bottom: 10%;
+    left: 5% !important; 
+    max-width: 90%;
+    text-align: center;
+  }
+  
+  .carousel-caption h1 {
+    font-size: 1.8rem; 
+    margin-bottom: 0.5rem;
+  }
+  
+  .carousel-caption p {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .tag {
+    padding: 8px 20px;
+    font-size: 0.9rem;
+  }
+  
+  .carousel-item img {
+    height: 40vh;
+  }
+  
+  /* Barra Social - Movida para o rodapé */
+  .social-bar {
+    top: auto;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    padding: 0.5rem 0;
+    background: rgba(255, 255, 255, 0.9); 
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+  }
+  
+  .social-bar a {
+    width: 45px;
+    height: 45px;
+    font-size: 1.2rem;
+    margin-bottom: 0;
+  }
+  
+  /* Seções e Footer */
+  section {
+    padding: 3rem 0;
+  }
+  
+  footer {
+    padding: 40px 0 20px;
+  }
+  
+  #footerPhone {
+    font-size: 1.2rem !important;
+  }
+  
+  /* Modais de Gestão */
+  .modal-dialog.modal-xl {
+    max-width: 95vw;
+    margin: 0.5rem;
+  }
+  
+  .modal-body .nav-tabs {
+    flex-wrap: wrap;
+  }
+  
+  .modal-body .nav-item {
+    flex-grow: 1;
+    text-align: center;
+  }
+  
+  .modal-body .nav-link {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* Telas médias (md - 576px a 768px) */
+@media (min-width: 576px) and (max-width: 767.98px) {
   .carousel-caption {
     right: 5% !important;
     bottom: 15%;
+    max-width: 60%;
   }
   
   .carousel-caption h1 {
@@ -256,6 +345,10 @@ footer {
     font-size: 1rem;
   }
   
+  .carousel-item img {
+    height: 50vh;
+  }
+  
   .social-bar {
     padding-left: 0.5rem;
   }
@@ -263,94 +356,25 @@ footer {
   .social-bar a {
     width: 50px;
     height: 50px;
-    font-size: 1.2rem;
+    font-size: 1.3rem;
   }
   
-  section {
-    padding: 3rem 0;
+  .modal-dialog.modal-xl {
+    max-width: 95vw;
   }
 }
 
-@media (max-width: 576px) {
+/* Telas grandes (lg - 768px a 992px) */
+@media (min-width: 768px) and (max-width: 991.98px) {
   .carousel-caption h1 {
-    font-size: 2rem;
+    font-size: 3.5rem;
   }
   
   .carousel-caption p {
-    font-size: 1rem;
+    font-size: 1.5rem;
   }
   
-  .carousel-item img {
-    height: 50vh;
+  .modal-dialog.modal-xl {
+    max-width: 95vw;
   }
-}
-
-/* ===== SCROLL SUAVE ===== */
-html {
-  scroll-behavior: smooth;
-}
-
-/* ===== ANIMAÇÕES ===== */
-.fade-in {
-  animation: fadeIn 0.8s ease-in;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ===== ESTILOS PARA PÁGINA DE LOGIN (se necessário) ===== */
-.login-container {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--cinza-claro);
-}
-
-.login-card {
-  background: var(--branco);
-  padding: 3rem;
-  border-radius: 1rem;
-  box-shadow: var(--sombra);
-  width: 100%;
-  max-width: 400px;
-  margin: 2rem;
-}
-
-/* ===== ESTADOS ESPECIAIS ===== */
-.hidden {
-  display: none !important;
-}
-
-.text-muted {
-  color: #6c757d !important;
-}
-
-.border-light {
-  border-color: #dee2e6 !important;
-}
-:root { 
-  --azul: #0066CC; 
-  --azul-secundario: #003366;
-  --cor-texto: #333333;
-}
-
-/* Aplica as cores dinamicamente */
-.text-primary { color: var(--azul) !important; }
-.bg-primary { background-color: var(--azul) !important; }
-.btn-primary { 
-  background-color: var(--azul) !important; 
-  border-color: var(--azul) !important; 
-}
-.btn-primary:hover { 
-  background-color: var(--azul-secundario) !important; 
-  border-color: var(--azul-secundario) !important; 
-}
-
-body { color: var(--cor-texto); }
-
-.tag {
-  background: var(--azul) !important;
 }
