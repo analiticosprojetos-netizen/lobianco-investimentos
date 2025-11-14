@@ -276,7 +276,8 @@ function inicializarCarouselForcadamente() {
     }
     
     // Dados do formulário
-    const siteName = document.getElementById('cfg_siteName')?.value.trim() || "Lobianco Investimentos";
+    // Permite que o nome do site seja salvo como vazio
+    const siteName = document.getElementById('cfg_siteName')?.value.trim() || "";
     const phone = document.getElementById('cfg_phone')?.value.trim() || "(34) 99970-4808";
     const mainColor = document.getElementById('cfg_mainColor')?.value || "#0066CC";
     const secondaryColor = document.getElementById('cfg_secondaryColor')?.value || "#003366";
