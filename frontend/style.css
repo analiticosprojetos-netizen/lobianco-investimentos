@@ -459,3 +459,199 @@ html {
 	    font-size: 1rem;
 	  }
 	}
+
+/* ===== ESTILOS DO CHATBOT (CONSOLIDADO) ===== */
+
+/* Variáveis de cor (opcional, mas bom para consistência) */
+:root {
+    --chat-primary: #0066CC; /* Cor principal do seu site */
+    --chat-secondary: #f8f9fa; /* Cor de fundo */
+    --chat-text: #333;
+    --chat-bubble-user: #DCF8C6; /* Bolha do usuário */
+    --chat-bubble-bot: #FFFFFF; /* Bolha do bot */
+}
+
+/* 1. Botão Flutuante (Launcher) */
+#chatbot-launcher {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background-color: var(--chat-primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    z-index: 10000; /* Acima de tudo */
+    /* Garante que o ícone Font Awesome seja exibido */
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    transition: transform 0.3s ease;
+}
+
+#chatbot-launcher:hover {
+    transform: scale(1.05);
+}
+
+/* 2. Janela do Chat */
+#chatbot-window {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    width: 350px;
+    height: 500px;
+    background-color: var(--chat-secondary);
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+    display: none; /* Inicialmente escondido */
+    flex-direction: column;
+    overflow: hidden;
+    font-family: 'Poppins', sans-serif;
+}
+
+#chatbot-window.open {
+    display: flex;
+}
+
+/* 3. Cabeçalho */
+.chat-header {
+    background-color: var(--chat-primary);
+    color: white;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+}
+
+.chat-header button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+/* 4. Corpo da Conversa */
+.chat-body {
+    flex-grow: 1;
+    padding: 15px;
+    overflow-y: auto;
+    background-color: #E5DDD5; /* Fundo de chat suave */
+}
+
+/* Estilo das Mensagens */
+.chat-message {
+    margin-bottom: 10px;
+    display: flex;
+}
+
+.chat-message.bot {
+    justify-content: flex-start;
+}
+
+.chat-message.user {
+    justify-content: flex-end;
+}
+
+.chat-bubble {
+    max-width: 80%;
+    padding: 10px 15px;
+    border-radius: 18px;
+    line-height: 1.4;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+.chat-message.bot .chat-bubble {
+    background-color: var(--chat-bubble-bot);
+    color: var(--chat-text);
+    border-bottom-left-radius: 2px;
+}
+
+.chat-message.user .chat-bubble {
+    background-color: var(--chat-bubble-user);
+    color: var(--chat-text);
+    border-bottom-right-radius: 2px;
+}
+
+/* 5. Opções de Interação (Botões) */
+.chat-options {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.chat-options button {
+    background-color: var(--chat-primary);
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-weight: 600;
+}
+
+.chat-options button:hover {
+    background-color: #0056b3;
+}
+
+/* 6. Rodapé (Input) */
+.chat-footer {
+    padding: 10px;
+    border-top: 1px solid #ccc;
+    display: flex;
+}
+
+.chat-footer input {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px 0 0 5px;
+    outline: none;
+}
+
+.chat-footer button {
+    background-color: var(--chat-primary);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 0 5px 5px 0;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.chat-footer button:hover {
+    background-color: #0056b3;
+}
+
+/* Estilo para a bolha de carregamento */
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--chat-primary);
+    border-radius: 50%;
+    margin: 0 2px;
+    animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes bounce {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1.0); }
+}
