@@ -336,6 +336,7 @@ app.get('/api/imoveis', async (req, res) => {
       return res.status(500).json({ error: error.message });
     }
     console.log(`✅ ${data?.length || 0} imóveis encontrados`);
+    console.log(JSON.stringify(data, null, 2)); // Adicionado para depuração
     res.json(data || []);
   } catch (error) {
     console.error('❌ Erro em imoveis:', error);
