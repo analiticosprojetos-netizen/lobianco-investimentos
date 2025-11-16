@@ -604,13 +604,14 @@ function renderizarImoveis(imoveis) {
 	                ${slide.map(imovel => {
 	                  const img = imovel.image_urls?.[0] || BANNER_PADRAO;
 	                  // 1. Obter o link base do WhatsApp da configuração
-		                  const whatsappBaseLink = document.getElementById('cfg_whatsapp')?.value || 'https://wa.me/5534999704808';
+		                  const whatsappConfig = document.getElementById('cfg_whatsapp')?.value || 'https://wa.me/5534999704808';
 		                  
 		                  // 2. Criar a mensagem personalizada
 		                  const mensagem = encodeURIComponent(`Olá, gostaria de saber mais sobre o imóvel: ${imovel.title}`);
 		                  
-		                  // 3. Construir o link final
-		                  const whatsappLink = `${whatsappBaseLink.split('?')[0]}?text=${mensagem}`;
+		                  // 3. Construir o link final: usar a URL de configuração e adicionar o parâmetro 'text'
+		                  // Isso garante que o número configurado (que deve estar na URL) seja usado.
+		                  const whatsappLink = `${whatsappConfig.split('?')[0]}?text=${mensagem}`;
 	                  
 	                  return `
 	                    <div class="col">
