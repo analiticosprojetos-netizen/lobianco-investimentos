@@ -42,13 +42,17 @@ async function apiCall(endpoint, options = {}) {
 }
 
 // ========== CONFIGURAÇÕES COM CORES ==========
+// ========== CONFIGURAÇÕES COM CORES ==========
 async function carregarConfig() {
   try {
     const config = await apiCall('/site-config');
     await aplicarConfiguracoes(config);
+    return config; // Retorna a configuração carregada
   } catch (error) {
     console.error('Erro ao carregar configuração:', error);
-    aplicarConfigPadrao();
+    // Aplica a configuração padrão e a retorna
+    const configPadrao = await aplicarConfigPadrao();
+    return configPadrao;
   }
 }
 
@@ -138,7 +142,11 @@ function aplicarConfiguracoes(config) {
     const instagramLink = document.querySelector('.social-bar .instagram');
     const facebookLink = document.querySelector('.social-bar .facebook');
     
-    if (whatsappLink && config.whatsapp_link) whatsappLink.href = config.whatsapp_link;
+    // Usar o campo 'whatsapp_link' para o link do WhatsApp da barra lateral
+    if (whatsappLink && config.whatsapp_link) {
+      whatsappLink.href = config.whatsapp_link;
+    }
+    
     if (instagramLink && config.instagram_link) instagramLink.href = config.instagram_link;
     if (facebookLink && config.facebook_link) facebookLink.href = config.facebook_link;
     
@@ -553,16 +561,16 @@ async function testarConexao() {
 }
 
 // ========== IMÓVEIS ==========
-async function carregarImoveis() {
+async function carregarImoveis(config) {
   try {
     const imoveis = await apiCall('/imoveis');
-    renderizarImoveis(imoveis);
+    renderizarImoveis(imoveis, config); // Passa o objeto config para renderizarImoveis
   } catch (error) {
     console.error('Erro ao carregar imóveis:', error);
   }
 }
 
-function renderizarImoveis(imoveis) {
+function renderizarImoveis(imoveis, config) {
   const secoes = [
     { id: 'lancamentos-cards', type: 'lancamento' },
     { id: 'planta-cards', type: 'na_planta' },
@@ -603,15 +611,26 @@ function renderizarImoveis(imoveis) {
 	              <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 g-4">
 	                ${slide.map(imovel => {
 	                  const img = imovel.image_urls?.[0] || BANNER_PADRAO;
-	                  // 1. Obter o link base do WhatsApp da configuração
-		                  const whatsappConfig = document.getElementById('cfg_whatsapp')?.value || 'https://wa.me/5534999704808';
+	                  // 1. Obter o link base do WhatsApp da configuração (usando o objeto 'config' carregado)
+		                  let whatsappBaseLink;
+		                  
+		                  if (config && config.whatsapp_link) {
+		                    // Prioriza o 'whatsapp_link' configurado
+		                    whatsappBaseLink = config.whatsapp_link;
+		                  } else if (config && config.phone) {
+		                    // Fallback: Se 'whatsapp_link' estiver vazio, usa o 'phone' para construir o link wa.me
+		                    const numeroLimpo = config.phone.replace(/\D/g, '');
+		                    whatsappBaseLink = `https://wa.me/${numeroLimpo}`;
+		                  } else {
+		                    // Fallback para o link padrão
+		                    whatsappBaseLink = 'https://wa.me/5534999704808';
+		                  }
 		                  
 		                  // 2. Criar a mensagem personalizada
 		                  const mensagem = encodeURIComponent(`Olá, gostaria de saber mais sobre o imóvel: ${imovel.title}`);
 		                  
-		                  // 3. Construir o link final: usar a URL de configuração e adicionar o parâmetro 'text'
-		                  // Isso garante que o número configurado (que deve estar na URL) seja usado.
-		                  const whatsappLink = `${whatsappConfig.split('?')[0]}?text=${mensagem}`;
+		                  // 3. Construir o link final: usar o link base e adicionar o parâmetro 'text'
+		                  const whatsappLink = `${whatsappBaseLink.split('?')[0]}?text=${mensagem}`;
 	                  
 	                  return `
 	                    <div class="col">
@@ -1368,17 +1387,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // Configurar modais primeiro
   configurarModais();
   
-  // Carregar dados e inicializar carousel
-  carregarConfig().then(() => {
-    console.log('✅ Configuração carregada, inicializando carousel...');
+  // Carregar dados e inicializar
+  carregarConfig().then((config) => {
+    console.log('✅ Configuração carregada, inicializando carousel e imóveis...');
     
-    // Garantir que o carousel foi inicializado
+    // 1. Carregar Imóveis (agora com o objeto config)
+    carregarImoveis(config);
+    
+    // 2. Garantir que o carousel principal foi inicializado
     setTimeout(() => {
       inicializarCarouselForcadamente();
     }, 300);
   });
-  
-  carregarImoveis();
 
   // Teste da API
   apiCall('/health')
