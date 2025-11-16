@@ -157,39 +157,6 @@ body {
 }
 
 /* Estilos para o Card de Imóvel */
-.property-card .carousel {
-  position: relative; /* Garante que os controles do carrossel interno se posicionem corretamente */
-}
-
-.property-card .carousel-control-prev,
-.property-card .carousel-control-next {
-  width: 15%; /* Aumenta a área de clique */
-  opacity: 0.8;
-  transition: opacity 0.2s ease;
-}
-
-.property-card .carousel-control-prev:hover,
-.property-card .carousel-control-next:hover {
-  opacity: 1;
-}
-
-.property-card .carousel-control-prev-icon,
-.property-card .carousel-control-next-icon {
-  background-color: rgba(0, 0, 0, 0.5); /* Fundo escuro para contraste */
-  border-radius: 50%;
-  padding: 10px;
-  width: 30px;
-  height: 30px;
-  background-size: 60%;
-}
-
-.property-card .carousel-control-prev-icon {
-  transform: translateX(-50%);
-}
-
-.property-card .carousel-control-next-icon {
-  transform: translateX(50%);
-}
 .property-card {
   transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
 }

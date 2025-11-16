@@ -191,13 +191,13 @@ function aplicarConfiguracoes(config) {
               existingCarousel.dispose();
             }
             
-		            // Criar novo carousel com configurações para início automático
-			            const carouselInstance = new bootstrap.Carousel(carouselElement, {
-			              interval: 4000,     // 4 segundos entre transições (velocidade padrão)
-			              wrap: true,         // Ciclo contínuo
-			              touch: true,        // Swipe habilitado
-			              keyboard: true      // Navegação por teclado
-			            });
+	            // Criar novo carousel com configurações para início automático
+		            const carouselInstance = new bootstrap.Carousel(carouselElement, {
+		              interval: 4000,     // 4 segundos entre transições (velocidade padrão)
+		              wrap: true,         // Ciclo contínuo
+		              touch: true,        // Swipe habilitado
+		              keyboard: true      // Navegação por teclado
+		            });
             
             // Iniciar automaticamente
             carouselInstance.cycle();
@@ -275,122 +275,253 @@ function inicializarCarouselForcadamente() {
       configAtual = {};
     }
     
-    // 1. Coletar dados do formulário
-    const configData = {
-      site_name: document.getElementById('cfg_siteName').value,
-      phone: document.getElementById('cfg_phone').value,
-      company_email: document.getElementById('cfg_email').value,
-      company_address: document.getElementById('cfg_address').value,
-      whatsapp_link: document.getElementById('cfg_whatsapp').value,
-      instagram_link: document.getElementById('cfg_instagram').value,
-      facebook_link: document.getElementById('cfg_facebook').value,
-      main_color: document.getElementById('cfg_mainColor').value,
-      secondary_color: document.getElementById('cfg_secondaryColor').value,
-      text_color: document.getElementById('cfg_textColor').value,
-      logo_width: document.getElementById('cfg_logoWidth').value,
-      logo_height: document.getElementById('cfg_logoHeight').value,
-      site_name_size: document.getElementById('cfg_siteNameSize').value,
-      site_name_align: document.getElementById('cfg_siteNameAlign').value,
-      // Manter banners existentes
-      banner_images: configAtual.banner_images || []
-    };
+    // Dados do formulário
+    // Permite que o nome do site seja salvo como vazio
+    const siteName = document.getElementById('cfg_siteName')?.value.trim() || "";
+    const phone = document.getElementById('cfg_phone')?.value.trim() || "(34) 99970-4808";
+    const mainColor = document.getElementById('cfg_mainColor')?.value || "#0066CC";
+    const secondaryColor = document.getElementById('cfg_secondaryColor')?.value || "#003366";
+    const textColor = document.getElementById('cfg_textColor')?.value || "#333333";
+    const email = document.getElementById('cfg_email')?.value.trim() || "";
+    const address = document.getElementById('cfg_address')?.value.trim() || "";
+    const whatsapp = document.getElementById('cfg_whatsapp')?.value.trim() || "";
+    const instagram = document.getElementById('cfg_instagram')?.value.trim() || "";
+    const facebook = document.getElementById('cfg_facebook')?.value.trim() || "";
+    const logoWidth = document.getElementById('cfg_logoWidth')?.value || "60px";
+    const logoHeight = document.getElementById('cfg_logoHeight')?.value || "60px";
     
-    // 2. Processar upload de logo, se houver
-    const logoFile = document.getElementById('cfg_logo').files[0];
+    // Novos campos de personalização do nome do site
+    const siteNameSize = document.getElementById('cfg_siteNameSize')?.value || "";
+    const siteNameAlign = document.getElementById('cfg_siteNameAlign')?.value || "";
+    
+    const logoFile = document.getElementById('cfg_logo')?.files[0];
+    const bannerFiles = document.getElementById('cfg_banners')?.files;
+    
+    let logoUrl = configAtual.logo_url || '';
+    let bannerUrls = configAtual.banner_images || [];
+
+    // 1. UPLOAD DA LOGO (se houver nova logo)
     if (logoFile) {
-      console.log('🖼️ Uploading novo logo...');
-      const logoBase64 = await readFileAsBase64(logoFile);
-      const ext = logoFile.name.split('.').pop() || 'png';
-      const filename = `logo_${Date.now()}.${ext}`;
-      
-      const uploadResult = await apiCall('/upload', {
-        method: 'POST',
-        body: JSON.stringify({
-          file: logoBase64,
-          filename: filename,
-          type: 'logo'
-        })
-      });
-      configData.logo_url = uploadResult.url;
-      console.log('✅ Logo enviado:', configData.logo_url);
-    } else {
-      // Manter logo existente se não houver novo upload
-      configData.logo_url = configAtual.logo_url || '';
-    }
-    
-    // 3. Processar upload de banners, se houver
-    const bannerFiles = document.getElementById('cfg_banners').files;
-    if (bannerFiles.length > 0) {
-      console.log(`🖼️ Uploading ${bannerFiles.length} novos banners...`);
-      
-      const filesData = [];
-      for (let i = 0; i < bannerFiles.length; i++) {
-        const file = bannerFiles[i];
-        const base64 = await readFileAsBase64(file);
-        const ext = file.name.split('.').pop() || 'jpg';
-        const filename = `banner_${Date.now()}_${i}.${ext}`;
-        filesData.push({ file: base64, filename: filename });
-      }
-      
-      // Tenta upload múltiplo, se falhar, faz upload individual
-      let uploadResult;
+      console.log('📤 Fazendo upload da NOVA logo...');
       try {
-        uploadResult = await apiCall('/upload-banners', {
-          method: 'POST',
-          body: JSON.stringify({ files: filesData })
-        });
+        logoUrl = await fazerUploadArquivo(logoFile, 'logo');
+        console.log('✅ Nova logo enviada:', logoUrl);
       } catch (error) {
-        console.warn('⚠️ Upload múltiplo falhou, tentando upload individual...', error);
-        uploadResult = await uploadBannersIndividualmente(filesData);
+        console.error('❌ Erro no upload da logo:', error);
+        alert("❌ Erro ao fazer upload da logo: " + error.message);
+        // Mantém a logo existente em caso de erro
       }
-      
-      // Adicionar novas URLs de banners às existentes
-      configData.banner_images = [...(configAtual.banner_images || []), ...uploadResult.urls];
-      console.log(`✅ ${uploadResult.urls.length} novos banners adicionados.`);
     }
-    
-    // 4. Enviar dados completos para a API
-    const result = await apiCall('/site-config', {
+    // Se não há nova logo, mantém a existente (já definida acima)
+
+    // 2. UPLOAD DE NOVOS BANNERS (adicionar aos existentes)
+    if (bannerFiles && bannerFiles.length > 0) {
+      console.log(`📤📤 Fazendo upload de ${bannerFiles.length} NOVOS banners...`);
+      try {
+        const uploadResult = await fazerUploadMultiplo(bannerFiles, 'banners');
+        if (uploadResult && uploadResult.urls && uploadResult.urls.length > 0) {
+          // ADICIONAR novos banners aos existentes (não substituir!)
+          bannerUrls = [...bannerUrls, ...uploadResult.urls];
+          console.log('✅ Novos banners adicionados. Total:', bannerUrls.length);
+          
+          // Remover banner padrão se houver banners customizados
+          if (bannerUrls.includes(BANNER_PADRAO) && bannerUrls.length > 1) {
+            bannerUrls = bannerUrls.filter(url => url !== BANNER_PADRAO);
+            console.log('🔄 Banner padrão removido (há banners customizados)');
+          }
+          
+          alert(`✅ ${uploadResult.message}\nTotal de banners: ${bannerUrls.length}`);
+        } else {
+          console.warn('⚠️ Nenhum banner novo foi enviado com sucesso');
+        }
+      } catch (error) {
+        console.error('❌ Erro no upload de banners:', error);
+        alert("❌ Erro ao fazer upload dos banners: " + error.message);
+        // Continua com os banners existentes em caso de erro
+      }
+    }
+
+    // 3. GARANTIR que há pelo menos um banner
+    if (bannerUrls.length === 0) {
+      bannerUrls = [BANNER_PADRAO];
+      console.log('🖼️ Nenhum banner encontrado, usando banner padrão');
+    }
+
+    // 4. PREPARAR DADOS PARA SALVAR (mantendo todos os dados existentes)
+    const configData = {
+      // Manter ID existente se houver (para evitar duplicatas)
+      ...(configAtual.id && { id: configAtual.id }),
+      
+      // Dados básicos (novos ou atualizados)
+      site_name: siteName,
+      phone: phone,
+      main_color: mainColor,
+      secondary_color: secondaryColor,
+      text_color: textColor,
+            // Mídia
+      logo_url: logoUrl,
+      logo_width: logoWidth,
+      logo_height: logoHeight,
+      banner_images: bannerUrls,
+      
+      // Personalização do nome do site
+      site_name_size: siteNameSize,
+      site_name_align: siteNameAlign,
+      
+      // Contatos
+      company_email: email,
+      company_address: address,
+      whatsapp_link: whatsapp,
+      instagram_link: instagram,
+      facebook_link: facebook,
+      
+      // Timestamp de atualização
+      updated_at: new Date().toISOString()
+    };
+
+    console.log('💾 Salvando configuração no banco...', {
+      site_name: configData.site_name,
+      banners_count: configData.banner_images.length,
+      logo: configData.logo_url ? 'Sim' : 'Não',
+      tem_id: !!configData.id
+    });
+
+    const resultado = await apiCall('/site-config', {
       method: 'POST',
       body: JSON.stringify(configData)
     });
+
+    alert("✅ Configurações salvas com sucesso!\nBanners ativos: " + bannerUrls.length);
     
-    alert('✅ Configuração salva com sucesso!');
-    await carregarConfig(); // Recarrega as configurações para atualizar a interface
+    // Limpar campos de arquivo após salvar
+    document.getElementById('cfg_logo').value = '';
+    document.getElementById('cfg_banners').value = '';
     
+    // Recarregar a configuração para aplicar as mudanças
+    await carregarConfig();
+    
+    // Atualizar a visualização no modal de gestão
+    await preencherCamposConfiguracao();
+    
+    console.log('🎯 Configuração salva com sucesso!');
+
   } catch (error) {
     console.error('❌ Erro ao salvar configuração:', error);
-    alert(`❌ Erro ao salvar configuração: ${error.message}`);
+    alert("❌ Erro ao salvar configuração: " + error.message);
   }
+};
+
+// ========== UPLOAD DE ARQUIVOS CORRIGIDOS ==========
+async function fazerUploadArquivo(file, tipo) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      try {
+        const ext = file.name.split('.').pop() || 'jpg';
+        const filename = `${tipo}_${Date.now()}.${ext}`;
+        
+        console.log(`📤 Enviando ${tipo}: ${filename}`);
+        const uploadData = await apiCall('/upload', {
+          method: 'POST',
+          body: JSON.stringify({
+            file: e.target.result,
+            filename: filename,
+            type: tipo
+          })
+        });
+        
+        resolve(uploadData.url);
+      } catch (error) {
+        reject(error);
+      }
+    };
+    reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+    reader.readAsDataURL(file);
+  });
 }
 
-async function uploadBannersIndividualmente(filesData) {
-  if (filesData.length === 0) return { success: true, urls: [], message: 'Nenhum arquivo para upload' };
+async function fazerUploadMultiplo(files, tipo) {
+  console.log(`📦 Preparando ${files.length} arquivos para upload...`);
+  const filesData = [];
   
-  console.log(`⚠️ Tentando upload individual de ${filesData.length} banners...`);
-  
-  const urls = [];
-  for (const fileData of filesData) {
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    
+    // Validar tamanho
+    if (file.size > 10 * 1024 * 1024) {
+      console.warn(`❌ Arquivo muito grande: ${file.name}`);
+      alert(`❌ Arquivo ${file.name} é muito grande (máximo 10MB)`);
+      continue;
+    }
+
+    // Validar tipo
+    if (!file.type.startsWith('image/')) {
+      console.warn(`❌ Tipo inválido: ${file.type}`);
+      alert(`❌ Arquivo ${file.name} não é uma imagem válida`);
+      continue;
+    }
+
     try {
-      const uploadData = await apiCall('/upload', {
-        method: 'POST',
-        body: JSON.stringify({
-          file: fileData.file,
-          filename: fileData.filename,
-          type: 'banners'
-        })
+      const fileData = await readFileAsBase64(file);
+      const ext = file.name.split('.').pop() || 'jpg';
+      const filename = `${tipo}_${Date.now()}_${i}.${ext}`;
+      
+      filesData.push({
+        file: fileData,
+        filename: filename
       });
-      urls.push(uploadData.url);
-    } catch (individualError) {
-      console.error('❌ Erro no upload individual:', individualError);
+      
+      console.log(`✅ Arquivo preparado: ${filename}`);
+    } catch (error) {
+      console.error(`❌ Erro ao ler arquivo ${file.name}:`, error);
+      alert(`❌ Erro ao processar arquivo ${file.name}`);
     }
   }
+
+  if (filesData.length === 0) {
+    throw new Error('Nenhum arquivo válido para upload');
+  }
+
+  console.log(`🚀 Enviando ${filesData.length} arquivos para /upload-banners...`);
   
-  return {
-    success: true,
-    urls: urls,
-    message: `${urls.length} de ${filesData.length} banner(s) enviado(s) com sucesso (fallback)`
-  };
+  try {
+    const response = await apiCall('/upload-banners', {
+      method: 'POST',
+      body: JSON.stringify({
+        files: filesData
+      })
+    });
+    
+    console.log('✅ Upload múltiplo concluído:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Erro no upload múltiplo:', error);
+    
+    // Tentar upload individual como fallback
+    console.log('🔄 Tentando upload individual como fallback...');
+    const urls = [];
+    for (const fileData of filesData) {
+      try {
+        const uploadData = await apiCall('/upload', {
+          method: 'POST',
+          body: JSON.stringify({
+            file: fileData.file,
+            filename: fileData.filename,
+            type: 'banners'
+          })
+        });
+        urls.push(uploadData.url);
+      } catch (individualError) {
+        console.error('❌ Erro no upload individual:', individualError);
+      }
+    }
+    
+    return {
+      success: true,
+      urls: urls,
+      message: `${urls.length} de ${filesData.length} banner(s) enviado(s) com sucesso (fallback)`
+    };
+  }
 }
 
 function readFileAsBase64(file) {
@@ -442,209 +573,125 @@ function renderizarImoveis(imoveis) {
     const container = document.getElementById(s.id);
     if (!container) return;
     
-		    const lista = (imoveis || []).filter(i => i.type === s.type);
-		    
-		    if (lista.length === 0) {
-		      container.innerHTML = '<p class="text-center text-muted col-12">Em breve mais imóveis...</p>';
-		      return;
-		    }
-		    
-		    // 1. Agrupar imóveis em slides de 3
-		    const slides = [];
-		    for (let i = 0; i < lista.length; i += 3) {
-		      slides.push(lista.slice(i, i + 3));
-		    }
-		    
-		    const carouselId = `${s.id}-carousel`;
-		    
-		    // 2. Gerar o HTML do carrossel
-			    let carouselHTML = `
-			      <div id="${carouselId}" class="carousel slide" data-bs-ride="false" data-bs-interval="false">
-		        <div class="carousel-indicators">
-		          ${slides.map((_, index) => `
-		            <button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${index}" 
-		                    class="${index === 0 ? 'active' : ''}" aria-label="Slide ${index + 1}"></button>
-		          `).join('')}
-		        </div>
-		        <div class="carousel-inner">
-		          ${slides.map((slide, slideIndex) => `
-		            <div class="carousel-item ${slideIndex === 0 ? 'active' : ''}">
-		              <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 g-4">
-		                ${slide.map(imovel => {
-		                  const fotos = imovel.image_urls || [];
-		                  const fotosLimitadas = fotos.slice(0, 5); // Limita a 5 fotos
-		                  const fotoPrincipal = fotos[0] || BANNER_PADRAO;
-		                  const whatsappLink = document.getElementById('cfg_whatsapp')?.value || 'https://wa.me/5534999704808';
+	    const lista = (imoveis || []).filter(i => i.type === s.type);
+	    
+	    if (lista.length === 0) {
+	      container.innerHTML = '<p class="text-center text-muted col-12">Em breve mais imóveis...</p>';
+	      return;
+	    }
+	    
+	    // 1. Agrupar imóveis em slides de 3
+	    const slides = [];
+	    for (let i = 0; i < lista.length; i += 3) {
+	      slides.push(lista.slice(i, i + 3));
+	    }
+	    
+	    const carouselId = `${s.id}-carousel`;
+	    
+	    // 2. Gerar o HTML do carrossel
+		    let carouselHTML = `
+		      <div id="${carouselId}" class="carousel slide" data-bs-ride="false" data-bs-interval="false">
+	        <div class="carousel-indicators">
+	          ${slides.map((_, index) => `
+	            <button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${index}" 
+	                    class="${index === 0 ? 'active' : ''}" aria-label="Slide ${index + 1}"></button>
+	          `).join('')}
+	        </div>
+	        <div class="carousel-inner">
+	          ${slides.map((slide, slideIndex) => `
+	            <div class="carousel-item ${slideIndex === 0 ? 'active' : ''}">
+	              <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 g-4">
+	                ${slide.map(imovel => {
+	                  const img = imovel.image_urls?.[0] || BANNER_PADRAO;
+	                  // 1. Obter o link base do WhatsApp da configuração
+		                  const whatsappBaseLink = document.getElementById('cfg_whatsapp')?.value || 'https://wa.me/5534999704808';
 		                  
-		                  // Mensagem pré-preenchida do WhatsApp
-		                  const mensagemWhatsapp = encodeURIComponent(`Olá, gostaria de ter mais detalhes desse imóvel: ${imovel.title}`);
-		                  const linkWhatsappCompleto = `${whatsappLink.replace('https://wa.me/', 'https://api.whatsapp.com/send?phone=')}&text=${mensagemWhatsapp}`;
+		                  // 2. Criar a mensagem personalizada
+		                  const mensagem = encodeURIComponent(`Olá, gostaria de saber mais sobre o imóvel: ${imovel.title}`);
 		                  
-		                  // ID único para o carrossel interno do card
-		                  const cardCarouselId = `card-carousel-${imovel.id}`;
-		                  
-		                  return `
-		                    <div class="col">
-		                      <div class="card h-100 shadow border-0 property-card">
-		                        
-		                        <!-- Carrossel de Fotos do Card -->
-		                        <div id="${cardCarouselId}" class="carousel slide" data-bs-interval="false">
-		                          <div class="carousel-inner">
-		                            ${fotosLimitadas.map((url, i) => `
-		                              <div class="carousel-item ${i === 0 ? 'active' : ''}">
-		                                <img src="${url}" class="d-block w-100" style="height:250px;object-fit:cover;" 
-		                                     onerror="this.src='${BANNER_PADRAO}'" 
-		                                     alt="Foto ${i + 1} de ${imovel.title}"
-		                                     data-bs-toggle="modal" data-bs-target="#photoModal" 
-		                                     data-imovel-id="${imovel.id}" data-foto-index="${i}"
-		                                     onclick="abrirModalFotos('${imovel.id}', ${i})">
-		                              </div>
-		                            `).join('')}
-		                            ${fotosLimitadas.length === 0 ? `
-		                              <div class="carousel-item active">
-		                                <img src="${BANNER_PADRAO}" class="d-block w-100" style="height:250px;object-fit:cover;" 
-		                                     alt="Sem foto"
-		                                     data-bs-toggle="modal" data-bs-target="#photoModal" 
-		                                     data-imovel-id="${imovel.id}" data-foto-index="0"
-		                                     onclick="abrirModalFotos('${imovel.id}', 0)">
-		                              </div>
-		                            ` : ''}
-		                          </div>
-		                          
-		                          ${fotosLimitadas.length > 1 ? `
-		                            <button class="carousel-control-prev" type="button" data-bs-target="#${cardCarouselId}" data-bs-slide="prev">
+		                  // 3. Construir o link final
+		                  const whatsappLink = `${whatsappBaseLink.split('?')[0]}?text=${mensagem}`;
+	                  
+	                  return `
+	                    <div class="col">
+	                      <div class="card h-100 shadow border-0 property-card">
+	                        <!-- INÍCIO: CARROSSEL DE IMAGENS DO CARD -->
+		                        ${imovel.image_urls && imovel.image_urls.length > 1 ? `
+		                          <div id="card-carousel-${imovel.id}" class="carousel slide" data-bs-interval="false">
+		                            <div class="carousel-inner">
+		                              ${imovel.image_urls.map((url, index) => `
+		                                <div class="carousel-item ${index === 0 ? 'active' : ''}">
+		                                  <img src="${url}" class="d-block w-100 card-img-top" style="height:250px;object-fit:cover;" onerror="this.src='${BANNER_PADRAO}'" alt="Foto ${index + 1}">
+		                                </div>
+		                              `).join('')}
+		                            </div>
+		                            <button class="carousel-control-prev" type="button" data-bs-target="#card-carousel-${imovel.id}" data-bs-slide="prev">
 		                              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
 		                              <span class="visually-hidden">Anterior</span>
 		                            </button>
-		                            <button class="carousel-control-next" type="button" data-bs-target="#${cardCarouselId}" data-bs-slide="next">
+		                            <button class="carousel-control-next" type="button" data-bs-target="#card-carousel-${imovel.id}" data-bs-slide="next">
 		                              <span class="carousel-control-next-icon" aria-hidden="true"></span>
 		                              <span class="visually-hidden">Próximo</span>
 		                            </button>
-		                          ` : ''}
-		                        </div>
-		                        <!-- Fim Carrossel de Fotos do Card -->
-		                        
-		                        <div class="card-body d-flex flex-column">
-		                          <h5 class="card-title fw-bold text-truncate">${imovel.title}</h5>
-		                          <p class="text-muted small mb-2"><i class="bi bi-geo-alt-fill me-1"></i>${imovel.location || 'Uberlândia'}</p>
-		                          
-		                          <!-- Detalhes do Imóvel -->
-		                          <div class="row g-1 mb-3 small text-muted">
-		                            <div class="col-6"><i class="bi bi-currency-dollar me-1"></i>Preço: ${imovel.price || 'Consulte'}</div>
-		                            <div class="col-6"><i class="bi bi-rulers me-1"></i>Área: ${imovel.area || '-'}</div>
-		                            <div class="col-6"><i class="bi bi-house-door-fill me-1"></i>Quartos: ${imovel.bedrooms || '-'}</div>
-		                            <div class="col-6"><i class="bi bi-droplet-fill me-1"></i>Banheiros: ${imovel.bathrooms || '-'}</div>
-		                            <div class="col-6"><i class="bi bi-car-fill me-1"></i>Vagas: ${imovel.garage || '-'}</div>
-		                            <div class="col-6"><i class="bi bi-water me-1"></i>Piscina: ${imovel.pool ? 'Sim' : 'Não'}</div>
 		                          </div>
-		                          
-		                          <a href="${linkWhatsappCompleto}" target="_blank" class="btn btn-success mt-auto fw-bold">
-		                            <i class="bi bi-whatsapp me-2"></i>Falar com Consultor
-		                          </a>
-		                        </div>
-		                      </div>
-		                    </div>
-		                  `;
-		                }).join('')}
-		              </div>
-		            </div>
-		          `).join('')}
-		        </div>
-		        
-		        <!-- Controles -->
-		        ${slides.length > 1 ? `
-		          <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
-		            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-		            <span class="visually-hidden">Anterior</span>
-		          </button>
-		          <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next">
-		            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-		            <span class="visually-hidden">Próximo</span>
-		          </button>
-		        ` : ''}
-		      </div>
-		    `;
-		    
-		    container.innerHTML = carouselHTML;
-		    
-		    // 3. Inicializar o carrossel
-		    const carouselElement = document.getElementById(carouselId);
-		    if (carouselElement) {
-		      // Inicializa o carrossel sem auto-slide (interval: false)
-			      const carouselInstance = new bootstrap.Carousel(carouselElement, {
-			        interval: false, // Desliga o auto-slide para navegação manual (Fixo)
-			        wrap: true
-			      });
-			      carouselInstance.pause(); // Garante que ele não inicie automaticamente
-		    }
-	  });
-	}
-
-// Função para abrir o modal de fotos (Nova)
-window.abrirModalFotos = function(imovelId, fotoIndex) {
-    // 1. Encontrar o imóvel na lista
-    const imoveis = window.imoveisData || []; // Assumindo que você armazena os dados em uma variável global
-    const imovel = imoveis.find(i => i.id === imovelId);
-    
-    if (!imovel || !imovel.image_urls || imovel.image_urls.length === 0) {
-        console.error('Imóvel ou fotos não encontrados para o ID:', imovelId);
-        return;
-    }
-    
-    const fotos = imovel.image_urls.slice(0, 5);
-    const modalCarouselInner = document.getElementById('modalCarouselInner');
-    const modalCarouselIndicators = document.getElementById('modalCarouselIndicators');
-    
-    if (!modalCarouselInner || !modalCarouselIndicators) {
-        console.error('Elementos do modal de fotos não encontrados.');
-        return;
-    }
-    
-    // 2. Gerar o conteúdo do carrossel do modal
-    let innerHTML = '';
-    let indicatorsHTML = '';
-    
-    fotos.forEach((url, i) => {
-        const isActive = i === fotoIndex;
-        innerHTML += `
-            <div class="carousel-item ${isActive ? 'active' : ''}">
-                <img src="${url}" class="d-block w-100" alt="Foto ${i + 1} de ${imovel.title}">
-            </div>
-        `;
-        indicatorsHTML += `
-            <button type="button" data-bs-target="#photoModalCarousel" data-bs-slide-to="${i}" 
-                    class="${isActive ? 'active' : ''}" aria-label="Slide ${i + 1}"></button>
-        `;
-    });
-    
-    modalCarouselInner.innerHTML = innerHTML;
-    modalCarouselIndicators.innerHTML = indicatorsHTML;
-    
-    // 3. Atualizar o título do modal
-    document.getElementById('photoModalLabel').textContent = imovel.title;
-    
-    // 4. Inicializar/Reinicializar o carrossel do modal
-    const modalCarouselElement = document.getElementById('photoModalCarousel');
-    if (modalCarouselElement) {
-        // Destruir instância anterior para garantir que o slide correto seja exibido
-        const existingCarousel = bootstrap.Carousel.getInstance(modalCarouselElement);
-        if (existingCarousel) {
-            existingCarousel.dispose();
-        }
-        
-        // Criar nova instância
-        const modalCarousel = new bootstrap.Carousel(modalCarouselElement, {
-            interval: false,
-            wrap: true
-        });
-        
-        // Mover para a foto clicada
-        modalCarousel.to(fotoIndex);
-    }
-    
-    // 5. Abrir o modal (já deve estar aberto pelo data-bs-target, mas é bom garantir)
-    const photoModal = new bootstrap.Modal(document.getElementById('photoModal'));
-    photoModal.show();
+		                        ` : `
+		                          <img src="${imovel.image_urls?.[0] || BANNER_PADRAO}" class="card-img-top" style="height:250px;object-fit:cover;" onerror="this.src='${BANNER_PADRAO}'" alt="Foto Principal">
+		                        `}
+		                        <!-- FIM: CARROSSEL DE IMAGENS DO CARD -->
+	                        <div class="card-body d-flex flex-column">
+	                          <h5 class="card-title fw-bold text-truncate">${imovel.title}</h5>
+	                          <p class="text-muted small mb-2"><i class="bi bi-geo-alt-fill me-1"></i>${imovel.location || 'Uberlândia'}</p>
+	                          
+	                          <!-- Detalhes do Imóvel -->
+	                          <div class="row g-1 mb-3 small text-muted">
+	                            <div class="col-6"><i class="bi bi-currency-dollar me-1"></i>Preço: ${imovel.price || 'Consulte'}</div>
+	                            <div class="col-6"><i class="bi bi-rulers me-1"></i>Área: ${imovel.area || '-'}</div>
+	                            <div class="col-6"><i class="bi bi-house-door-fill me-1"></i>Quartos: ${imovel.bedrooms || '-'}</div>
+	                            <div class="col-6"><i class="bi bi-droplet-fill me-1"></i>Banheiros: ${imovel.bathrooms || '-'}</div>
+	                            <div class="col-6"><i class="bi bi-car-fill me-1"></i>Vagas: ${imovel.garage || '-'}</div>
+	                            <div class="col-6"><i class="bi bi-water me-1"></i>Piscina: ${imovel.pool ? 'Sim' : 'Não'}</div>
+	                          </div>
+	                          
+	                          <a href="${whatsappLink}" target="_blank" class="btn btn-success mt-auto fw-bold">
+	                            <i class="bi bi-whatsapp me-2"></i>Falar com Consultor
+	                          </a>
+	                        </div>
+	                      </div>
+	                    </div>
+	                  `;
+	                }).join('')}
+	              </div>
+	            </div>
+	          `).join('')}
+	        </div>
+	        
+	        <!-- Controles -->
+	        ${slides.length > 1 ? `
+	          <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
+	            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+	            <span class="visually-hidden">Anterior</span>
+	          </button>
+	          <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next">
+	            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+	            <span class="visually-hidden">Próximo</span>
+	          </button>
+	        ` : ''}
+	      </div>
+	    `;
+	    
+	    container.innerHTML = carouselHTML;
+	    
+	    // 3. Inicializar o carrossel
+	    const carouselElement = document.getElementById(carouselId);
+	    if (carouselElement) {
+	      // Inicializa o carrossel sem auto-slide (interval: false)
+		      const carouselInstance = new bootstrap.Carousel(carouselElement, {
+		        interval: false, // Desliga o auto-slide para navegação manual (Fixo)
+		        wrap: true
+		      });
+		      carouselInstance.pause(); // Garante que ele não inicie automaticamente
+	    }
+  });
 }
 
 // SALVAR IMÓVEL - CORRIGIDO
@@ -691,328 +738,662 @@ window.salvarImovel = async function(tipo) {
           console.log(`✅ Foto preparada: ${filename}`);
         } catch (error) {
           console.error(`❌ Erro ao processar foto ${file.name}:`, error);
-          alert(`❌ Erro ao processar foto ${file.name}: ${error.message}`);
+          alert(`❌ Erro ao processar arquivo ${file.name}`);
         }
       }
     }
 
-    const imovelData = {
-      title: titulo,
+    const dados = {
       type: tipo,
-      location: document.getElementById(`loc_${tipo}`)?.value,
-      price: document.getElementById(`prc_${tipo}`)?.value,
-      area: document.getElementById(`area_${tipo}`)?.value,
-      bedrooms: document.getElementById(`qto_${tipo}`)?.value,
-      bathrooms: document.getElementById(`bnh_${tipo}`)?.value,
-      garage: document.getElementById(`vgs_${tipo}`)?.value,
-      pool: document.getElementById(`pisc_${tipo}`)?.checked,
-      description: document.getElementById(`desc_${tipo}`)?.value,
-      // Adiciona as fotos para upload, a API cuidará do resto
+      title: titulo,
+      description: document.getElementById(`desc_${tipo}`)?.value || '',
+      price: document.getElementById(`preco_${tipo}`)?.value || '',
+      location: document.getElementById(`loc_${tipo}`)?.value || 'Uberlândia - MG',
+      bedrooms: parseInt(document.getElementById(`quartos_${tipo}`)?.value) || 0,
+      bathrooms: parseInt(document.getElementById(`banheiros_${tipo}`)?.value) || 0,
+      area: document.getElementById(`area_${tipo}`)?.value || null,
+      garage: parseInt(document.getElementById(`garagem_${tipo}`)?.value) || 0,
+      pool: document.getElementById(`piscina_${tipo}`)?.checked || false,
       fotosParaUpload: fotosParaUpload,
-      image_urls: [] // Inicializa vazio, a API preenche
+      image_urls: [] // Será preenchido pelo backend com as URLs das fotos enviadas
     };
 
-    // Se for uma atualização (editando), o ID estará presente
-    const imovelId = document.getElementById(`id_${tipo}`)?.value;
-    
-    let result;
-    if (imovelId) {
-      // ATUALIZAÇÃO
-      // A API espera que as fotos existentes sejam passadas no body para serem mantidas
-      const fotosExistentes = Array.from(document.querySelectorAll(`#fotosExistentes_${tipo} img`)).map(img => img.dataset.url);
-      
-      imovelData.fotosExistentes = fotosExistentes;
-      imovelData.novasFotos = fotosParaUpload; // Renomeia para o PUT
-      delete imovelData.fotosParaUpload;
-      
-      result = await apiCall(`/imoveis/${imovelId}`, {
-        method: 'PUT',
-        body: JSON.stringify(imovelData)
-      });
-      alert('✅ Imóvel atualizado com sucesso!');
-    } else {
-      // NOVO CADASTRO
-      result = await apiCall('/imoveis', {
-        method: 'POST',
-        body: JSON.stringify(imovelData)
-      });
-      alert('✅ Imóvel cadastrado com sucesso!');
-    }
-
-    // Limpar formulário e recarregar
-    document.getElementById(`form_${tipo}`)?.reset();
-    document.getElementById(`fotosPreview_${tipo}`).innerHTML = '';
-    document.getElementById(`fotosExistentes_${tipo}`).innerHTML = '';
-    document.getElementById(`id_${tipo}`).value = ''; // Limpa o ID para o próximo cadastro
-    
-    await carregarImoveis();
-    await carregarImoveisGestao(); // Recarrega a lista de gestão
-    
-  } catch (error) {
-    console.error(`❌ Erro ao salvar imóvel (${tipo}):`, error);
-    alert(`❌ Erro ao salvar imóvel: ${error.message}`);
-  }
-}
-
-// CARREGAR IMÓVEIS PARA GESTÃO - CORRIGIDO
-async function carregarImoveisGestao() {
-  try {
-    const imoveis = await apiCall('/imoveis');
-    
-    // Armazenar globalmente para uso no modal de fotos
-    window.imoveisData = imoveis; 
-    
-    renderizarTabelaGestao(imoveis.filter(i => i.type === 'lancamento'), 'tabelaLancamentos');
-    renderizarTabelaGestao(imoveis.filter(i => i.type === 'na_planta'), 'tabelaPlanta');
-    renderizarTabelaGestao(imoveis.filter(i => i.type === 'aluguel'), 'tabelaAluguel');
-    
-  } catch (error) {
-    console.error('Erro ao carregar imóveis para gestão:', error);
-  }
-}
-
-function renderizarTabelaGestao(imoveis, tabelaId) {
-  const tbody = document.getElementById(tabelaId);
-  if (!tbody) return;
-  
-  tbody.innerHTML = '';
-  
-  if (imoveis.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Nenhum imóvel cadastrado.</td></tr>';
-    return;
-  }
-  
-  imoveis.forEach(imovel => {
-    const row = tbody.insertRow();
-    row.innerHTML = `
-      <td>${imovel.id}</td>
-      <td>${imovel.title}</td>
-      <td>${imovel.location || '-'}</td>
-      <td>${imovel.price || '-'}</td>
-      <td>${imovel.image_urls?.length || 0}</td>
-      <td>
-        <button class="btn btn-sm btn-primary me-2" onclick="editarImovel('${imovel.id}', '${imovel.type}')">
-          <i class="bi bi-pencil-fill"></i>
-        </button>
-        <button class="btn btn-sm btn-danger" onclick="excluirImovel('${imovel.id}')">
-          <i class="bi bi-trash-fill"></i>
-        </button>
-      </td>
-    `;
-  });
-}
-
-// EDITAR IMÓVEL - CORRIGIDO
-window.editarImovel = function(id, tipo) {
-  const imovel = window.imoveisData.find(i => i.id === id);
-  if (!imovel) {
-    alert('Imóvel não encontrado!');
-    return;
-  }
-  
-  // 1. Preencher campos de texto
-  document.getElementById(`id_${tipo}`).value = imovel.id;
-  document.getElementById(`tit_${tipo}`).value = imovel.title || '';
-  document.getElementById(`loc_${tipo}`).value = imovel.location || '';
-  document.getElementById(`prc_${tipo}`).value = imovel.price || '';
-  document.getElementById(`area_${tipo}`).value = imovel.area || '';
-  document.getElementById(`qto_${tipo}`).value = imovel.bedrooms || '';
-  document.getElementById(`bnh_${tipo}`).value = imovel.bathrooms || '';
-  document.getElementById(`vgs_${tipo}`).value = imovel.garage || '';
-  document.getElementById(`pisc_${tipo}`).checked = imovel.pool || false;
-  document.getElementById(`desc_${tipo}`).value = imovel.description || '';
-  
-  // 2. Preencher pré-visualização de fotos existentes
-  const fotosExistentesDiv = document.getElementById(`fotosExistentes_${tipo}`);
-  fotosExistentesDiv.innerHTML = '';
-  
-  if (imovel.image_urls && imovel.image_urls.length > 0) {
-    imovel.image_urls.forEach((url, index) => {
-      const imgContainer = document.createElement('div');
-      imgContainer.className = 'position-relative d-inline-block me-2 mb-2';
-      imgContainer.innerHTML = `
-        <img src="${url}" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;" data-url="${url}">
-        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0" 
-                onclick="removerFotoExistente(this, '${tipo}', '${url}')">
-          <i class="bi bi-x"></i>
-        </button>
-      `;
-      fotosExistentesDiv.appendChild(imgContainer);
+    console.log('💾 Enviando dados do imóvel...', {
+      tipo: dados.type,
+      titulo: dados.title,
+      fotos: dados.fotosParaUpload.length
     });
-  }
-  
-  // 3. Mudar para a aba de cadastro/edição
-  const tabButton = document.querySelector(`#gestaoModal button[data-bs-target="#tab${tipo.charAt(0).toUpperCase() + tipo.slice(1)}"]`);
-  if (tabButton) {
-    bootstrap.Tab.getInstance(tabButton).show();
-  }
-  
-  // 4. Rolar para o topo do modal
-  document.querySelector('#gestaoModal .modal-body').scrollTop = 0;
-}
 
-// REMOVER FOTO EXISTENTE - CORRIGIDO
-window.removerFotoExistente = function(button, tipo, url) {
-  if (confirm('Tem certeza que deseja remover esta foto? Ela será removida permanentemente ao salvar o imóvel.')) {
-    const container = button.closest('.position-relative');
-    container.remove();
-    
-    // Adicionar a URL a uma lista de exclusão temporária se necessário, mas por enquanto, 
-    // a lógica de salvar vai apenas enviar as URLs que restaram na div `fotosExistentes`
-    console.log(`Foto ${url} marcada para exclusão.`);
+    const resultado = await apiCall('/imoveis', {
+      method: 'POST',
+      body: JSON.stringify(dados)
+    });
+
+    alert(`✅ ${resultado.message || "Imóvel salvo com sucesso!"}`);
+    limparFormulario(tipo);
+    carregarImoveis();
+
+  } catch (error) {
+    console.error('❌ Erro ao salvar imóvel:', error);
+    alert("❌ Erro ao salvar imóvel: " + error.message);
   }
+};
+
+function limparFormulario(tipo) {
+  document.querySelectorAll(`#tit_${tipo}, #desc_${tipo}, #preco_${tipo}, #loc_${tipo}, #quartos_${tipo}, #banheiros_${tipo}, #area_${tipo}, #garagem_${tipo}`).forEach(el => {
+    el.value = '';
+  });
+  const piscinaCheckbox = document.getElementById(`piscina_${tipo}`);
+  if (piscinaCheckbox) piscinaCheckbox.checked = false;
+  
+  const fileInput = document.getElementById(`fotos_${tipo}`);
+  if (fileInput) fileInput.value = '';
 }
 
 // EXCLUIR IMÓVEL - CORRIGIDO
 window.excluirImovel = async function(id) {
-  if (!confirm('Tem certeza que deseja excluir este imóvel? Esta ação é irreversível e removerá todas as fotos associadas.')) {
-    return;
-  }
-  
   try {
+    if (!confirm("🗑️ Tem certeza que quer excluir este imóvel?")) return;
+    
     await apiCall(`/imoveis/${id}`, {
       method: 'DELETE'
     });
     
-    alert('✅ Imóvel excluído com sucesso!');
-    await carregarImoveis();
-    await carregarImoveisGestao();
+    alert("✅ Imóvel excluído com sucesso!");
+    carregarImoveis();
+  } catch (error) {
+    alert("❌ Erro ao excluir imóvel: " + error.message);
+  }
+}
+
+// ========== FUNÇÕES DE EDIÇÃO DE IMÓVEIS ==========
+
+// ABRIR MODAL DE EDIÇÃO
+window.editarImovel = async function(imovel) {
+  try {
+    console.log('✏️ Abrindo edição do imóvel:', imovel);
+    
+    // Preencher o modal de edição
+    document.getElementById('edit_id').value = imovel.id;
+    document.getElementById('edit_titulo').value = imovel.title || '';
+    document.getElementById('edit_descricao').value = imovel.description || '';
+    document.getElementById('edit_preco').value = imovel.price || '';
+    document.getElementById('edit_localizacao').value = imovel.location || '';
+    document.getElementById('edit_quartos').value = imovel.bedrooms || '';
+    document.getElementById('edit_banheiros').value = imovel.bathrooms || '';
+    document.getElementById('edit_area').value = imovel.area || '';
+    document.getElementById('edit_garagem').value = imovel.garage || '';
+    document.getElementById('edit_piscina').checked = imovel.pool || false;
+    
+    // Mostrar fotos atuais em um carrossel
+    const fotosContainer = document.getElementById('fotosAtuais');
+    const carouselId = `modal-carousel-${imovel.id}`;
+    
+    if (imovel.image_urls && imovel.image_urls.length > 0) {
+      fotosContainer.innerHTML = `
+        <h6 class="fw-bold mt-4 mb-3">Fotos Atuais (${imovel.image_urls.length})</h6>
+        
+        <div id="${carouselId}" class="carousel slide" data-bs-ride="carousel" data-bs-interval="false">
+          <div class="carousel-inner rounded shadow-lg">
+            ${imovel.image_urls.map((url, index) => `
+              <div class="carousel-item ${index === 0 ? 'active' : ''}">
+                <img src="${url}" class="d-block w-100" style="height: 400px; object-fit: cover;" 
+                     onerror="this.src='${BANNER_PADRAO}'" alt="Foto ${index + 1}">
+                <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 p-2">
+                  <h5 class="text-white">Foto ${index + 1} de ${imovel.image_urls.length}</h5>
+                  <button class="btn btn-danger btn-sm mt-1" onclick="excluirFotoImovel('${imovel.id}', '${url}', ${index})">
+                    <i class="fas fa-trash"></i> Excluir Foto
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          
+          ${imovel.image_urls.length > 1 ? `
+            <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
+              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Anterior</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next">
+              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Próximo</span>
+            </button>
+          ` : ''}
+        </div>
+      `;
+      
+      // Inicializar o carrossel do modal
+      setTimeout(() => {
+        const carouselElement = document.getElementById(carouselId);
+        if (carouselElement) {
+          new bootstrap.Carousel(carouselElement, {
+            interval: false,
+            wrap: true
+          });
+        }
+      }, 100);
+      
+    } else {
+      fotosContainer.innerHTML = `
+        <h6 class="fw-bold mt-4 mb-3">Fotos Atuais</h6>
+        <p class="text-muted">Nenhuma foto cadastrada</p>
+      `;
+    }
+    
+    // Abrir modal de edição
+    new bootstrap.Modal(document.getElementById('editarImovelModal')).show();
     
   } catch (error) {
-    console.error('❌ Erro ao excluir imóvel:', error);
-    alert(`❌ Erro ao excluir imóvel: ${error.message}`);
+    console.error('❌ Erro ao abrir edição:', error);
+    alert("❌ Erro ao carregar dados do imóvel: " + error.message);
   }
-}
+};
 
-// PREVIEW DE FOTOS NO CADASTRO - CORRIGIDO
-window.previewFotos = function(input, previewId) {
-  const preview = document.getElementById(previewId);
-  preview.innerHTML = '';
-  
-  if (input.files) {
-    Array.from(input.files).forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = document.createElement('img');
-        img.src = e.target.result;
-        img.className = 'img-thumbnail me-2 mb-2';
-        img.style.width = '100px';
-        img.style.height = '100px';
-        img.style.objectFit = 'cover';
-        preview.appendChild(img);
-      };
-      reader.readAsDataURL(file);
-    });
-  }
-}
-
-// ========== INICIALIZAÇÃO ==========
-document.addEventListener('DOMContentLoaded', async () => {
-  // 1. Carregar configurações (cores, logo, banners)
-  await carregarConfig();
-  
-  // 2. Carregar imóveis para o frontend
-  await carregarImoveis();
-  
-  // 3. Configurar eventos de gestão
-  const gestaoModal = document.getElementById('gestaoModal');
-  if (gestaoModal) {
-    gestaoModal.addEventListener('show.bs.modal', carregarImoveisGestao);
-  }
-  
-  // 4. Evento para abrir modal de login
-  document.getElementById('openGestao')?.addEventListener('click', () => {
-    const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
-    loginModal.show();
-  });
-  
-  // 5. Evento de login (simples)
-  document.getElementById('btnLogin')?.addEventListener('click', () => {
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-    const errorDiv = document.getElementById('loginError');
+// EXCLUIR FOTO INDIVIDUAL DO IMÓVEL
+window.excluirFotoImovel = async function(imovelId, fotoUrl, index) {
+  try {
+    if (!confirm("🗑️ Tem certeza que quer excluir esta foto?")) return;
     
-    if (email === 'qualquer coisa' && password === 'qualquer coisa') {
-      errorDiv.textContent = '';
-      const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
-      loginModal.hide();
+    // Buscar imóvel atual
+    const imoveis = await apiCall('/imoveis');
+    const imovel = imoveis.find(i => i.id === imovelId);
+    
+    if (!imovel || !imovel.image_urls) return;
+    
+    // Remover a foto específica
+    const novasFotos = imovel.image_urls.filter((url, i) => i !== index);
+    
+    // Atualizar imóvel
+    const dadosAtualizados = {
+      ...imovel,
+      image_urls: novasFotos
+    };
+    
+    await apiCall(`/imoveis/${imovelId}`, {
+      method: 'PUT',
+      body: JSON.stringify(dadosAtualizados)
+    });
+    
+    alert("✅ Foto excluída com sucesso!");
+    
+    // Recarregar dados e reabrir edição
+    const imoveisAtualizados = await apiCall('/imoveis');
+    const imovelAtualizado = imoveisAtualizados.find(i => i.id === imovelId);
+    await editarImovel(imovelAtualizado);
+    
+  } catch (error) {
+    console.error('❌ Erro ao excluir foto:', error);
+    alert("❌ Erro ao excluir foto: " + error.message);
+  }
+};
+
+// SALVAR EDIÇÃO DO IMÓVEL
+window.salvarEdicaoImovel = async function() {
+  try {
+    const id = document.getElementById('edit_id').value;
+    const titulo = document.getElementById('edit_titulo').value.trim();
+    
+    if (!titulo) {
+      alert("❌ Preencha o título do imóvel!");
+      return;
+    }
+
+    // Buscar imóvel atual para manter fotos existentes
+    const imoveis = await apiCall('/imoveis');
+    const imovelAtual = imoveis.find(i => i.id === id);
+    
+    const fileInput = document.getElementById('edit_novas_fotos');
+    let novasFotosParaUpload = [];
+
+    // Processar NOVAS fotos se existirem
+    if (fileInput?.files.length > 0) {
+      console.log(`📸 Processando ${fileInput.files.length} novas fotos...`);
       
-      const gestaoModal = new bootstrap.Modal(document.getElementById('gestaoModal'));
-      gestaoModal.show();
-    } else {
-      errorDiv.textContent = 'E-mail ou senha incorretos.';
-    }
-  });
-  
-  // 6. Configurar eventos de preview de fotos
-  document.getElementById('fotos_lancamento')?.addEventListener('change', function() { previewFotos(this, 'fotosPreview_lancamento'); });
-  document.getElementById('fotos_planta')?.addEventListener('change', function() { previewFotos(this, 'fotosPreview_planta'); });
-  document.getElementById('fotos_aluguel')?.addEventListener('change', function() { previewFotos(this, 'fotosPreview_aluguel'); });
-  
-  // 7. Configurar eventos de salvar
-  document.getElementById('btnSalvarLancamento')?.addEventListener('click', () => salvarImovel('lancamento'));
-  document.getElementById('btnSalvarPlanta')?.addEventListener('click', () => salvarImovel('na_planta'));
-  document.getElementById('btnSalvarAluguel')?.addEventListener('click', () => salvarImovel('aluguel'));
-  
-  // 8. Configurar evento de salvar configuração
-  document.getElementById('btnSalvarConfig')?.addEventListener('click', salvarConfiguracao);
-  
-  // 9. Configurar evento de preview de logo
-  document.getElementById('cfg_logo')?.addEventListener('change', function() {
-    const preview = document.getElementById('cfg_logoPreview');
-    preview.innerHTML = '';
-    if (this.files && this.files[0]) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        preview.innerHTML = `<img src="${e.target.result}" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">`;
-      };
-      reader.readAsDataURL(this.files[0]);
-    }
-  });
-  
-  // 10. Configurar evento de preview de banners
-  document.getElementById('cfg_banners')?.addEventListener('change', function() {
-    const preview = document.getElementById('cfg_bannersPreview');
-    preview.innerHTML = '';
-    if (this.files) {
-      Array.from(this.files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const img = document.createElement('img');
-          img.src = e.target.result;
-          img.className = 'img-thumbnail me-2 mb-2';
-          img.style.width = '100px';
-          img.style.height = '100px';
-          img.style.objectFit = 'cover';
-          preview.appendChild(img);
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-  });
-  
-  // 11. Configurar evento de limpeza de configuração
-  document.getElementById('btnLimparConfig')?.addEventListener('click', async () => {
-    if (confirm('Tem certeza que deseja limpar as configurações duplicadas?')) {
-      try {
-        const result = await apiCall('/cleanup-config', { method: 'DELETE' });
-        alert(`✅ ${result.message}`);
-      } catch (error) {
-        alert(`❌ Erro ao limpar configurações: ${error.message}`);
+      for (let i = 0; i < fileInput.files.length; i++) {
+        const file = fileInput.files[i];
+        
+        if (file.size > 10 * 1024 * 1024) {
+          alert(`❌ Arquivo ${file.name} é muito grande (máximo 10MB)`);
+          continue;
+        }
+
+        if (!file.type.startsWith('image/')) {
+          alert(`❌ Arquivo ${file.name} não é uma imagem válida`);
+          continue;
+        }
+
+        try {
+          const fileData = await readFileAsBase64(file);
+          const ext = file.name.split('.').pop() || 'jpg';
+          const filename = `imovel_edit_${Date.now()}_${i}.${ext}`;
+          
+          novasFotosParaUpload.push({
+            file: fileData,
+            filename: filename
+          });
+          
+          console.log(`✅ Nova foto preparada: ${filename}`);
+        } catch (error) {
+          console.error(`❌ Erro ao processar nova foto ${file.name}:`, error);
+          alert(`❌ Erro ao processar arquivo ${file.name}`);
+        }
       }
     }
-  });
-  
-  // 12. Inicializar o carrossel principal após o carregamento das imagens
-  const heroCarouselElement = document.getElementById('heroCarousel');
-  if (heroCarouselElement) {
-    // Garante que o carrossel do hero seja inicializado, mesmo que sem imagens
-    new bootstrap.Carousel(heroCarouselElement, {
-      interval: 4000,
-      wrap: true
+
+    const dados = {
+      title: titulo,
+      description: document.getElementById('edit_descricao').value || '',
+      price: document.getElementById('edit_preco').value || '',
+      location: document.getElementById('edit_localizacao').value || '',
+      bedrooms: parseInt(document.getElementById('edit_quartos').value) || 0,
+      bathrooms: parseInt(document.getElementById('edit_banheiros').value) || 0,
+      area: document.getElementById('edit_area').value || null,
+      garage: parseInt(document.getElementById('edit_garagem').value) || 0,
+      pool: document.getElementById('edit_piscina').checked || false,
+      fotosExistentes: imovelAtual?.image_urls || [],
+      novasFotos: novasFotosParaUpload
+    };
+
+    console.log('💾 Salvando edição do imóvel...', {
+      id: id,
+      titulo: dados.title,
+      novas_fotos: dados.novasFotos.length
+    });
+
+    const resultado = await apiCall(`/imoveis/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(dados)
+    });
+
+    alert(`✅ ${resultado.message || "Imóvel atualizado com sucesso!"}`);
+    
+    // Fechar modal e recarregar dados
+    const editarModal = bootstrap.Modal.getInstance(document.getElementById('editarImovelModal'));
+    if (editarModal) {
+      editarModal.hide();
+    }
+    
+    carregarImoveis();
+    
+    // Recarregar gestão para atualizar a lista
+    if (document.getElementById('gestaoModal').style.display !== 'none') {
+      await abrirGestao();
+    }
+
+  } catch (error) {
+    console.error('❌ Erro ao salvar edição:', error);
+    alert("❌ Erro ao atualizar imóvel: " + error.message);
+  }
+};
+
+// ========== GESTÃO ==========
+// Na função abrirGestao, atualize a parte que mostra os imóveis cadastrados:
+async function abrirGestao() {
+  try {
+    const imoveis = await apiCall('/imoveis');
+    await preencherCamposConfiguracao();
+
+    const tipos = [
+      { tipo: 'lancamento', nome: 'Lançamentos', tabId: 'tabLancamentos' },
+      { tipo: 'na_planta', nome: 'Na Planta', tabId: 'tabPlanta' },
+      { tipo: 'aluguel', nome: 'Aluguel', tabId: 'tabAluguel' }
+    ];
+
+    tipos.forEach(t => {
+      const el = document.getElementById(t.tabId);
+      if (!el) return;
+      const lista = (imoveis || []).filter(i => i.type === t.tipo);
+
+      el.innerHTML = `
+        <h5 class="text-primary fw-bold mb-4">Cadastrar ${t.nome}</h5>
+        <div class="border rounded p-4 bg-light mb-5">
+          <!-- Formulário de cadastro (mantido igual) -->
+          <div class="row g-3">
+            <div class="col-12"><input class="form-control form-control-lg" id="tit_${t.tipo}" placeholder="Título do imóvel *"></div>
+            <div class="col-12"><textarea class="form-control" rows="4" id="desc_${t.tipo}" placeholder="Descrição completa"></textarea></div>
+            <div class="col-md-4"><input class="form-control" id="preco_${t.tipo}" placeholder="Preço"></div>
+            <div class="col-md-4"><input class="form-control" id="loc_${t.tipo}" placeholder="Localização"></div>
+            <div class="col-md-2"><input type="number" class="form-control" id="quartos_${t.tipo}" placeholder="Quartos"></div>
+            <div class="col-md-2"><input type="number" class="form-control" id="banheiros_${t.tipo}" placeholder="Banheiros"></div>
+            <div class="col-md-3"><input class="form-control" id="area_${t.tipo}" placeholder="Área m²"></div>
+            <div class="col-md-3"><input type="number" class="form-control" id="garagem_${t.tipo}" placeholder="Vagas"></div>
+            <div class="col-md-3"><div class="form-check mt-2"><input type="checkbox" class="form-check-input" id="piscina_${t.tipo}"><label class="form-check-label">Piscina</label></div></div>
+            <div class="col-12"><input type="file" multiple class="form-control" id="fotos_${t.tipo}" accept="image/*"></div>
+            <div class="col-12 text-end mt-3">
+              <button class="btn btn-success btn-lg px-5" onclick="salvarImovel('${t.tipo}')">SALVAR IMÓVEL</button>
+            </div>
+          </div>
+        </div>
+
+        <h5 class="mt-5 mb-3">Imóveis Cadastrados (${lista.length})</h5>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+          ${lista.map(i => `
+            <div class="col">
+              <div class="card h-100 shadow">
+                <img src="${i.image_urls?.[0] || BANNER_PADRAO}" class="card-img-top" style="height:200px;object-fit:cover;" onerror="this.src='${BANNER_PADRAO}'">
+                <div class="card-body d-flex flex-column">
+                  <h6 class="fw-bold">${i.title}</h6>
+                  <p class="text-muted small">${i.location || ''}</p>
+                  <p class="text-primary fw-bold">${i.price || 'Consulte'}</p>
+                  <div class="mt-auto">
+                    <button class="btn btn-warning btn-sm me-2" onclick="editarImovel(${JSON.stringify(i).replace(/"/g, '&quot;')})">
+                      <i class="fas fa-edit"></i> Editar
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="excluirImovel('${i.id}')">
+                      <i class="fas fa-trash"></i> Excluir
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>`;
+    });
+
+    new bootstrap.Modal(document.getElementById('gestaoModal')).show();
+  } catch (error) {
+    alert("❌ Erro ao abrir gestão: " + error.message);
+  }
+}
+
+// FUNÇÃO PARA PREENCHER CONFIGURAÇÕES - COM BOTÕES CORRIGIDOS
+async function preencherCamposConfiguracao() {
+  try {
+    const config = await apiCall('/site-config');
+    if (config) {
+      const setValueIfExists = (id, value) => {
+        const element = document.getElementById(id);
+        if (element && value !== undefined && value !== null) {
+          element.value = value;
+        }
+      };
+
+      setValueIfExists('cfg_siteName', config.site_name);
+      setValueIfExists('cfg_phone', config.phone);
+      setValueIfExists('cfg_email', config.company_email);
+      setValueIfExists('cfg_address', config.company_address);
+      setValueIfExists('cfg_whatsapp', config.whatsapp_link);
+      setValueIfExists('cfg_instagram', config.instagram_link);
+      setValueIfExists('cfg_facebook', config.facebook_link);
+      setValueIfExists('cfg_mainColor', config.main_color);
+      setValueIfExists('cfg_secondaryColor', config.secondary_color);
+      setValueIfExists('cfg_textColor', config.text_color);
+      setValueIfExists('cfg_logoWidth', config.logo_width);
+      setValueIfExists('cfg_logoHeight', config.logo_height);
+      
+      // Visualização da logo atual
+      const logoPreview = document.getElementById('logoPreview');
+      if (logoPreview) {
+        if (config.logo_url) {
+          logoPreview.innerHTML = `
+            <div class="card mt-2">
+              <div class="card-body text-center">
+                <img src="${config.logo_url}" style="max-width: 100px; max-height: 100px;" class="mb-2" 
+                     onerror="this.style.display='none'">
+                <br>
+                <button class="btn btn-danger btn-sm" onclick="excluirLogo()">
+                  <i class="fas fa-trash"></i> Excluir Logo
+                </button>
+              </div>
+            </div>
+          `;
+        } else {
+          logoPreview.innerHTML = '<p class="text-muted small mt-2">Nenhuma logo configurada</p>';
+        }
+      }
+      
+      // Visualização dos banners atuais - CORRIGIDO
+      const bannersContainer = document.getElementById('bannersAtuais');
+      if (bannersContainer) {
+        if (config.banner_images && config.banner_images.length > 0) {
+          // Filtrar banner padrão da lista
+          const bannersCustomizados = config.banner_images.filter(url => url !== BANNER_PADRAO);
+          
+          if (bannersCustomizados.length > 0) {
+            bannersContainer.innerHTML = `
+              <h6 class="mt-4 mb-3 fw-bold">Banners Atuais (${bannersCustomizados.length})</h6>
+              <div class="row g-3">
+                ${bannersCustomizados.map((url, index) => `
+                  <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card shadow-sm">
+                      <img src="${url}" class="card-img-top" style="height: 150px; object-fit: cover;" 
+                           onerror="this.src='${BANNER_PADRAO}'" alt="Banner ${index + 1}">
+                      <div class="card-body text-center">
+                        <small class="text-muted d-block">Banner ${index + 1}</small>
+                        <button class="btn btn-outline-danger btn-sm mt-2" onclick="window.excluirBanner('${url}')">
+                          <i class="fas fa-trash"></i> Excluir
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+              <p class="text-muted small mt-3">
+                <i class="fas fa-info-circle"></i> Novos banners serão adicionados aos existentes
+              </p>
+            `;
+          } else {
+            bannersContainer.innerHTML = `
+              <div class="alert alert-info mt-3">
+                <i class="fas fa-info-circle"></i> Nenhum banner personalizado. 
+                Usando banner padrão do sistema.
+              </div>
+            `;
+          }
+        } else {
+          bannersContainer.innerHTML = `
+            <div class="alert alert-info mt-3">
+              <i class="fas fa-info-circle"></i> Nenhum banner configurado
+            </div>
+          `;
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Erro ao preencher configuração:", error);
+  }
+}
+// ========== FUNÇÕES DE EXCLUSÃO DE BANNERS ==========
+
+// EXCLUIR BANNER INDIVIDUAL - CORRIGIDO
+window.excluirBanner = async function(bannerUrl) {
+  try {
+    console.log('🗑️ Tentando excluir banner:', bannerUrl);
+    
+    if (!confirm("🗑️ Tem certeza que quer excluir este banner?")) {
+      console.log('❌ Exclusão cancelada pelo usuário');
+      return;
+    }
+    
+    // Buscar configuração atual
+    const configAtual = await apiCall('/site-config');
+    console.log('📋 Configuração atual:', configAtual);
+    
+    if (!configAtual || !configAtual.banner_images) {
+      alert("❌ Nenhum banner encontrado para excluir");
+      return;
+    }
+    
+    // Filtrar o banner a ser excluído
+    const novosBanners = configAtual.banner_images.filter(url => {
+      const shouldKeep = url !== bannerUrl;
+      console.log(`🔍 Comparando: ${url} === ${bannerUrl} ? ${!shouldKeep}`);
+      return shouldKeep;
+    });
+    
+    console.log(`📊 Banner removido. Antes: ${configAtual.banner_images.length}, Depois: ${novosBanners.length}`);
+    
+    // Se não sobrou nenhum banner, adicionar o padrão
+    if (novosBanners.length === 0) {
+      novosBanners.push(BANNER_PADRAO);
+      console.log('🖼️ Adicionando banner padrão');
+    }
+    
+    // Atualizar configuração
+    const configData = {
+      ...configAtual,
+      banner_images: novosBanners
+    };
+    
+    console.log('💾 Salvando configuração atualizada...');
+    await apiCall('/site-config', {
+      method: 'POST',
+      body: JSON.stringify(configData)
+    });
+    
+    alert("✅ Banner excluído com sucesso!");
+    console.log('✅ Banner excluído com sucesso');
+    
+    // Recarregar configuração
+    await carregarConfig();
+    
+    // Atualizar visualização na gestão
+    await preencherCamposConfiguracao();
+    
+  } catch (error) {
+    console.error('❌ Erro ao excluir banner:', error);
+    alert("❌ Erro ao excluir banner: " + error.message);
+  }
+};
+
+// EXCLUIR LOGO - CORRIGIDO
+window.excluirLogo = async function() {
+  try {
+    console.log('🗑️ Tentando excluir logo...');
+    
+    if (!confirm("🗑️ Tem certeza que quer remover a logo?")) {
+      return;
+    }
+    
+    const configAtual = await apiCall('/site-config');
+    const configData = {
+      ...configAtual,
+      logo_url: ""
+    };
+    
+    await apiCall('/site-config', {
+      method: 'POST',
+      body: JSON.stringify(configData)
+    });
+    
+    alert("✅ Logo removida com sucesso!");
+    await preencherCamposConfiguracao();
+    
+  } catch (error) {
+    console.error('❌ Erro ao excluir logo:', error);
+    alert("❌ Erro ao excluir logo: " + error.message);
+  }
+};
+
+// EXCLUIR LOGO
+window.excluirLogo = async function() {
+  try {
+    if (!confirm("🗑️ Tem certeza que quer remover a logo?")) return;
+    
+    const configAtual = await apiCall('/site-config');
+    const configData = {
+      ...configAtual,
+      logo_url: ""
+    };
+    
+    await apiCall('/site-config', {
+      method: 'POST',
+      body: JSON.stringify(configData)
+    });
+    
+    alert("✅ Logo removida com sucesso!");
+    await preencherCamposConfiguracao();
+    
+  } catch (error) {
+    console.error('❌ Erro ao excluir logo:', error);
+    alert("❌ Erro ao excluir logo: " + error.message);
+  }
+};
+// ========== GESTÃO DE MODAIS ==========
+function configurarModais() {
+  // Configurar modal de login
+  const loginModal = document.getElementById('loginModal');
+  if (loginModal) {
+    loginModal.addEventListener('show.bs.modal', function () {
+      this.setAttribute('aria-hidden', 'false');
+    });
+    
+    loginModal.addEventListener('hide.bs.modal', function () {
+      this.setAttribute('aria-hidden', 'true');
     });
   }
-});
 
-// Armazenar dados dos imóveis globalmente para acesso pelo modal
-window.imoveisData = [];
+  // Configurar modal de gestão
+  const gestaoModal = document.getElementById('gestaoModal');
+  if (gestaoModal) {
+    gestaoModal.addEventListener('show.bs.modal', function () {
+      this.setAttribute('aria-hidden', 'false');
+    });
+    
+    gestaoModal.addEventListener('hide.bs.modal', function () {
+      this.setAttribute('aria-hidden', 'true');
+    });
+  }
+}
+
+// ========== LOGIN E GESTÃO ==========
+async function fazerLogin() {
+  const email = document.getElementById('loginEmail')?.value.trim();
+  const senha = document.getElementById('loginPassword')?.value;
+  
+  if (!email || !senha) {
+    document.getElementById('loginError').textContent = "Preencha todos os campos!";
+    return false;
+  }
+
+  // Fechar modal de login corretamente
+  const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+  if (loginModal) {
+    loginModal.hide();
+  }
+
+  // Abrir gestão após um pequeno delay para o modal fechar
+  setTimeout(() => {
+    abrirGestao();
+  }, 300);
+
+  return true;
+}
+
+// ========== INICIALIZAÇÃO ATUALIZADA ==========
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('🚀 Iniciando Lobianco Investimentos...');
+  
+  // Configurar modais primeiro
+  configurarModais();
+  
+  // Carregar dados e inicializar carousel
+  carregarConfig().then(() => {
+    console.log('✅ Configuração carregada, inicializando carousel...');
+    
+    // Garantir que o carousel foi inicializado
+    setTimeout(() => {
+      inicializarCarouselForcadamente();
+    }, 300);
+  });
+  
+  carregarImoveis();
+
+  // Teste da API
+  apiCall('/health')
+    .then(data => console.log('✅ API conectada:', data))
+    .catch(error => console.error('❌ Erro na API:', error));
+
+  // Event listeners
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('#openGestao')) {
+      const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+      loginModal.show();
+    }
+    
+    if (e.target.id === 'btnLogin' || e.target.closest('#btnLogin')) {
+      e.preventDefault();
+      fazerLogin();
+    }
+  });
+});

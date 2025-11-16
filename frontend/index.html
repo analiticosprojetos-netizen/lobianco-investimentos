@@ -419,10 +419,9 @@
           
           <!-- Fotos Atuais -->
           <div class="col-12">
-            <div id="fotosAtuais">
-              <h6 class="fw-bold mt-4 mb-3">Fotos Atuais</h6>
-              <p class="text-muted">Carregando fotos...</p>
-            </div>
+<div id="fotosAtuais">
+		              <!-- O carrossel de fotos será injetado aqui pelo JavaScript -->
+		            </div>
           </div>
           
           <!-- Novas Fotos -->
@@ -451,34 +450,3 @@
 <script src="script.js"></script>
 </body>
 </html>
-<!-- NOVO MODAL DE VISUALIZAÇÃO DE FOTOS -->
-<div class="modal fade" id="photoModal" tabindex="-1" aria-labelledby="photoModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="photoModalLabel">Fotos do Imóvel</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-      </div>
-      <div class="modal-body p-0">
-        <!-- Carrossel de Fotos do Modal -->
-        <div id="photoModalCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="false">
-          <div class="carousel-indicators" id="modalCarouselIndicators">
-            <!-- Indicadores carregados via JavaScript -->
-          </div>
-          <div class="carousel-inner" id="modalCarouselInner">
-            <!-- Imagens carregadas via JavaScript -->
-          </div>
-          <button class="carousel-control-prev" type="button" data-bs-target="#photoModalCarousel" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Anterior</span>
-          </button>
-          <button class="carousel-control-next" type="button" data-bs-target="#photoModalCarousel" data-bs-slide="next">
-            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Próximo</span>
-          </button>
-        </div>
-        <!-- Fim Carrossel de Fotos do Modal -->
-      </div>
-    </div>
-  </div>
-</div>
