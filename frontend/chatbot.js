@@ -325,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
             autoCloseTimer = setTimeout(() => {
                 console.log('Fechando chat por inatividade.');
                 toggleChat(); // Fecha o chat
-            }, 8000); // 8 segundos
+            }, 12000); // 8 segundos
         }
     }
 
