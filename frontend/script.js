@@ -845,54 +845,28 @@ window.editarImovel = async function(imovel) {
     document.getElementById('edit_garagem').value = imovel.garage || '';
     document.getElementById('edit_piscina').checked = imovel.pool || false;
     
-    // Mostrar fotos atuais em um carrossel
+    // Mostrar fotos atuais em uma grade, sem carrossel
     const fotosContainer = document.getElementById('fotosAtuais');
-    const carouselId = `modal-carousel-${imovel.id}`;
     
     if (imovel.image_urls && imovel.image_urls.length > 0) {
       fotosContainer.innerHTML = `
         <h6 class="fw-bold mt-4 mb-3">Fotos Atuais (${imovel.image_urls.length})</h6>
-        
-        <div id="${carouselId}" class="carousel slide" data-bs-ride="carousel" data-bs-interval="false">
-          <div class="carousel-inner rounded shadow-lg">
-            ${imovel.image_urls.map((url, index) => `
-              <div class="carousel-item ${index === 0 ? 'active' : ''}">
-                <img src="${url}" class="d-block w-100" style="height: 400px; object-fit: cover;" 
+        <div class="row row-cols-2 row-cols-lg-3 g-3">
+          ${imovel.image_urls.map((url, index) => `
+            <div class="col">
+              <div class="card position-relative">
+                <img src="${url}" class="img-fluid rounded" style="height: 150px; object-fit: cover;" 
                      onerror="this.src='${BANNER_PADRAO}'" alt="Foto ${index + 1}">
-                <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 p-2">
-                  <h5 class="text-white">Foto ${index + 1} de ${imovel.image_urls.length}</h5>
-                  <button class="btn btn-danger btn-sm mt-1" onclick="excluirFotoImovel('${imovel.id}', '${url}', ${index})">
-                    <i class="fas fa-trash"></i> Excluir Foto
+                <div class="position-absolute top-0 end-0 p-1">
+                  <button class="btn btn-danger btn-sm" onclick="excluirFotoImovel('${imovel.id}', '${url}', ${index})" title="Excluir Foto">
+                    <i class="fas fa-trash"></i>
                   </button>
                 </div>
               </div>
-            `).join('')}
-          </div>
-          
-          ${imovel.image_urls.length > 1 ? `
-            <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
-              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-              <span class="visually-hidden">Anterior</span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next">
-              <span class="carousel-control-next-icon" aria-hidden="true"></span>
-              <span class="visually-hidden">Próximo</span>
-            </button>
-          ` : ''}
+            </div>
+          `).join('')}
         </div>
       `;
-      
-      // Inicializar o carrossel do modal
-      setTimeout(() => {
-        const carouselElement = document.getElementById(carouselId);
-        if (carouselElement) {
-          new bootstrap.Carousel(carouselElement, {
-            interval: false,
-            wrap: true
-          });
-        }
-      }, 100);
-      
     } else {
       fotosContainer.innerHTML = `
         <h6 class="fw-bold mt-4 mb-3">Fotos Atuais</h6>
@@ -908,7 +882,6 @@ window.editarImovel = async function(imovel) {
     alert("❌ Erro ao carregar dados do imóvel: " + error.message);
   }
 };
-
 // EXCLUIR FOTO INDIVIDUAL DO IMÓVEL
 window.excluirFotoImovel = async function(imovelId, fotoUrl, index) {
   try {
