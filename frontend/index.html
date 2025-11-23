@@ -131,13 +131,38 @@
   </section>
 
   <!-- Footer -->
-  <footer class="text-center">
-    <div class="container">
-      <p id="footerPhone" class="fs-4 mb-2">(34) 99970-4808 | Uberlândia - MG</p>
-      <p>© 2025 Lobianco Investimentos</p>
-      <a href="javascript:void(0)" id="openGestao">
-        <i class="bi bi-gear-fill"></i> Área de Gestão
-      </a>
+  <footer class="text-white-50">
+    <div class="container py-5">
+      <div class="row">
+        <div class="col-md-4 mb-4">
+          <h5 id="footerLogoName" class="text-white mb-3">Lobianco Investimentos</h5>
+          <p id="footerAboutUs" class="small">
+            <!-- Sobre nós carregado via JS -->
+          </p>
+        </div>
+        <div class="col-md-4 mb-4">
+          <h5 class="text-white mb-3">Navegação</h5>
+          <ul class="list-unstyled">
+            <li><a href="#" class="text-white-50 text-decoration-none">Home</a></li>
+            <li><a href="#lancamentos" class="text-white-50 text-decoration-none">Lançamentos</a></li>
+            <li><a href="#plantas" class="text-white-50 text-decoration-none">Na Planta</a></li>
+            <li><a href="#aluguel" class="text-white-50 text-decoration-none">Aluguel</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4 mb-4">
+          <h5 class="text-white mb-3">Contato</h5>
+          <p id="footerPhone" class="mb-2"><i class="bi bi-telephone-fill me-2"></i>(34) 99970-4808</p>
+          <p id="footerEmail" class="mb-2"><i class="bi bi-envelope-fill me-2"></i></p>
+          <p id="footerAddress" class="mb-2"><i class="bi bi-geo-alt-fill me-2"></i></p>
+        </div>
+      </div>
+      <hr class="my-4">
+      <div class="text-center">
+        <p class="mb-2">© 2025 Lobianco Investimentos</p>
+        <a href="javascript:void(0)" id="openGestao">
+          <i class="bi bi-gear-fill"></i> Área de Gestão
+        </a>
+      </div>
     </div>
   </footer>
 
@@ -220,6 +245,11 @@
                   <div class="mb-3">
                     <label for="cfg_address" class="form-label fw-bold">Endereço</label>
                     <input type="text" class="form-control" id="cfg_address" placeholder="Uberlândia - MG">
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="cfg_about_us" class="form-label fw-bold">Sobre Nós (para o rodapé)</label>
+                    <textarea class="form-control" id="cfg_about_us" rows="4" placeholder="Descreva brevemente a empresa..."></textarea>
                   </div>
                 </div>
               </div>
