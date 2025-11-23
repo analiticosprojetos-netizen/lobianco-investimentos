@@ -3,9 +3,7 @@
   "version": "1.0.0",
   "main": "backend/api.js",
   "scripts": {
-    "start": "node backend/api.js",
-    "dev": "serve frontend",
-    "dev:full": "concurrently \"npm start\" \"npm run dev\""
+    "start": "node backend/api.js"
   },
   "keywords": [],
   "author": "",
@@ -17,8 +15,5 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2"
   },
-  "devDependencies": {
-    "concurrently": "^8.2.2",
-    "serve": "^14.2.3"
-  }
+  "devDependencies": {}
 }
