@@ -1,6 +1,6 @@
 // frontend/script.js - VERSÃO COMPLETA CORRIGIDA
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const API_BASE = isLocal ? 'http://localhost:3000/api' : '/api';
+const API_BASE = isLocal ? 'http://localhost:3001/api' : '/api';
 const BANNER_PADRAO = "https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?auto=format&fit=crop&w=2070&q=80";
 
 console.log(`🌍 Ambiente: ${isLocal ? 'LOCAL' : 'PRODUÇÃO'}`);
