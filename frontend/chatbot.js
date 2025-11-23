@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function loadImoveisData() {
-        const API_BASE = window.API_BASE || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:3000/api' : '/api' );
+        const API_BASE = '/api';
         try {
             const response = await fetch(`${API_BASE}/imoveis`);
             if (!response.ok) throw new Error('Erro ao carregar imóveis da API');
