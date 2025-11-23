@@ -237,6 +237,7 @@ app.put('/api/imoveis/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const imovelData = { ...req.body };
+    
     if (imovelData.novasFotos && imovelData.novasFotos.length > 0) {
       const novasFotosUrls = [];
       for (const fotoData of imovelData.novasFotos) {
@@ -254,9 +255,11 @@ app.put('/api/imoveis/:id', async (req, res) => {
         }
       }
       imovelData.image_urls = [...(imovelData.fotosExistentes || []), ...novasFotosUrls];
-      delete imovelData.novasFotos;
-      delete imovelData.fotosExistentes;
     }
+
+    // Sempre remover os campos temporários antes de enviar para o banco
+    delete imovelData.novasFotos;
+    delete imovelData.fotosExistentes;
 
     const { data, error } = await supabase.from('items').update(imovelData).eq('id', id).select();
     if (error) return res.status(500).json({ error: error.message });
