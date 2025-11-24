@@ -255,7 +255,7 @@ window.salvarConfiguracao = async function() {
       site_name_align: siteNameAlign,
       company_email: email,
       company_address: address,
-      company_about_us: aboutUs,
+      // company_about_us: aboutUs, // REMOVIDO TEMPORARIAMENTE
       whatsapp_link: whatsapp,
       instagram_link: instagram,
       facebook_link: facebook,
