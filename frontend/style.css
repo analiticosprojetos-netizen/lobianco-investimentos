@@ -337,12 +337,6 @@ html {
 
 /* ===== RESPONSIVIDADE - MODIFICADA ===== */
 @media (max-width: 992px) { /* Tablet e Mobile */
-  
-  body {
-    /* Adiciona espaço no final da página para não ser coberto pelos ícones sociais fixos */
-    padding-bottom: 90px; 
-  }
-
   /* Ajuste para a Navbar em telas menores que 992px (ponto de quebra do Bootstrap lg) */
   .navbar-brand {
     font-size: 1.5rem !important;
@@ -360,37 +354,6 @@ html {
   /* Ajuste para o nome do site em telas muito pequenas */
   .navbar-brand #siteName {
     font-size: 1.2rem !important; /* Reduz ainda mais o tamanho da fonte */
-  }
-
-  
-  /* Ajuste para a Social Bar em telas menores que 992px */
-  .social-bar {
-    top: auto;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    transform: none;
-    width: 100%;
-    display: flex;
-    justify-content: space-around;
-    padding: 1rem 0;
-    background-color: transparent;
-    box-shadow: none;
-    border-top: none;
-    pointer-events: none; /* Impede que a barra transparente bloqueie cliques */
-  }
-  
-  .social-bar a {
-    width: 45px;
-    height: 45px;
-    margin-bottom: 0;
-    font-size: 1.2rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3); /* Sombra nos ícones para destaque */
-    pointer-events: auto; /* Garante que os ícones sejam clicáveis */
-  }
-  
-  .social-bar a:hover {
-    transform: scale(1.1);
   }
   
   /* Ajuste para o Carrossel */
@@ -412,8 +375,6 @@ html {
   .carousel-caption h1 {
     font-size: 2.5rem;
   }
-  
-
   
   .carousel-caption p {
     font-size: 1.2rem;
@@ -449,16 +410,5 @@ html {
 	  .tag {
 	    padding: 8px 20px;
 	    font-size: 0.9rem;
-	  }
-	  
-	  /* Ajuste para a Social Bar em telas menores que 576px */
-	  .social-bar {
-	    padding: 0.5rem 0;
-	  }
-	  
-	  .social-bar a {
-	    width: 40px;
-	    height: 40px;
-	    font-size: 1rem;
 	  }
 	}
