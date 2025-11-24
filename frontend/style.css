@@ -337,6 +337,12 @@ html {
 
 /* ===== RESPONSIVIDADE - MODIFICADA ===== */
 @media (max-width: 992px) { /* Tablet e Mobile */
+  
+  body {
+    /* Adiciona espaço no final da página para não ser coberto pelos ícones sociais fixos */
+    padding-bottom: 90px; 
+  }
+
   /* Ajuste para a Navbar em telas menores que 992px (ponto de quebra do Bootstrap lg) */
   .navbar-brand {
     font-size: 1.5rem !important;
