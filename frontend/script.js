@@ -334,22 +334,21 @@ function renderizarImoveis(imoveis, config) {
   secoes.forEach(s => {
     const container = document.getElementById(s.id);
     if (!container) return;
-    
+
     const lista = (imoveis || []).filter(i => i.type === s.type);
     if (lista.length === 0) {
       container.innerHTML = '<p class="text-center text-muted col-12">Em breve mais imóveis...</p>';
       return;
     }
-    
+
     const slides = [];
     for (let i = 0; i < lista.length; i += 3) {
       slides.push(lista.slice(i, i + 3));
     }
-    
+
     const carouselId = `${s.id}-carousel`;
-    let carouselHTML = `<div id="${carouselId}" class="carousel slide" data-bs-ride="false" data-bs-interval="false">...</div>`; // Conteúdo omitido para brevidade
-    
-    container.innerHTML = slides.map((slide, slideIndex) => `
+
+    const slidesHTML = slides.map((slide, slideIndex) => `
       <div class="carousel-item ${slideIndex === 0 ? 'active' : ''}">
         <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 g-4">
           ${slide.map(imovel => {
@@ -384,14 +383,38 @@ function renderizarImoveis(imoveis, config) {
               </div>`;
           }).join('')}
         </div>
-      </div>`).join('');
-    
+      </div>
+    `).join('');
+
+    const controlsHTML = slides.length > 1 ? `
+      <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Anterior</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Próximo</span>
+      </button>
+    ` : '';
+
+    const fullCarouselHTML = `
+      <div id="${carouselId}" class="carousel slide" data-bs-ride="false">
+        <div class="carousel-inner">
+          ${slidesHTML}
+        </div>
+        ${controlsHTML}
+      </div>
+    `;
+
+    container.innerHTML = fullCarouselHTML;
+
     const carouselElement = document.getElementById(carouselId);
     if (carouselElement) {
-      new bootstrap.Carousel(carouselElement, { interval: false, wrap: true }).pause();
+      new bootstrap.Carousel(carouselElement, { interval: false, wrap: true });
     }
   });
 }
+
 
 window.salvarImovel = async function(tipo) {
   try {
