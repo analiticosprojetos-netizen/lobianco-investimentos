@@ -155,9 +155,9 @@ function aplicarConfiguracoes(config) {
             <img src="${url}" class="d-block w-100" style="height:70vh;object-fit:cover;" 
                  onerror="this.src='${BANNER_PADRAO}'" alt="Banner ${i + 1}">
             <div class="carousel-caption text-end pe-5">
-              <h1 class="display-3 fw-bold text-white">Viva o Alto Padrão</h1>
-              <p class="fs-1 text-white">Lançamentos em Uberlândia</p>
-              <span class="tag px-5 py-3 rounded-pill fw-bold fs-4">LANÇAMENTOS</span>
+              <h1 class="text-white">Viva o Alto Padrão</h1>
+              <p class="text-white">Lançamentos em Uberlândia</p>
+              <span class="tag">LANÇAMENTOS</span>
             </div>
           </div>`;
       });
