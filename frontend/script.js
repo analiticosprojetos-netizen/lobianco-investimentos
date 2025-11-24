@@ -132,9 +132,14 @@ function aplicarConfiguracoes(config) {
     const instagramLink = document.querySelector('.social-bar .instagram');
     const facebookLink = document.querySelector('.social-bar .facebook');
     
-    if (whatsappLink && config.whatsapp_link) {
-      whatsappLink.href = config.whatsapp_link;
+    if (whatsappLink) {
+      const mensagemPadrao = encodeURIComponent("Olá! Gostaria de mais informações sobre os imóveis.");
+      // Prioriza o link configurado, senão usa o telefone, e por último um fallback.
+      const whatsappBaseLink = config?.whatsapp_link || `https://wa.me/${(config?.phone || '5534999704808').replace(/\D/g, '')}`;
+      const baseUrl = whatsappBaseLink.split('?')[0];
+      whatsappLink.href = `${baseUrl}?text=${mensagemPadrao}`;
     }
+    
     if (instagramLink && config.instagram_link) instagramLink.href = config.instagram_link;
     if (facebookLink && config.facebook_link) facebookLink.href = config.facebook_link;
     
