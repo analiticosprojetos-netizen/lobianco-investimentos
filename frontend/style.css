@@ -367,10 +367,11 @@ html {
     width: 100%;
     display: flex;
     justify-content: space-around;
-    padding: 0.5rem 0;
-    background-color: #212529; /* Fundo escuro para melhor contraste */
-    box-shadow: 0 -4px 10px rgba(0,0,0,0.2);
-    border-top: 1px solid #333;
+    padding: 1rem 0;
+    background-color: transparent;
+    box-shadow: none;
+    border-top: none;
+    pointer-events: none; /* Impede que a barra transparente bloqueie cliques */
   }
   
   .social-bar a {
@@ -378,7 +379,8 @@ html {
     height: 45px;
     margin-bottom: 0;
     font-size: 1.2rem;
-    box-shadow: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3); /* Sombra nos ícones para destaque */
+    pointer-events: auto; /* Garante que os ícones sejam clicáveis */
   }
   
   .social-bar a:hover {
@@ -419,11 +421,6 @@ html {
   section {
     padding: 3rem 0;
   }
-
-  footer {
-    /* Aumenta o padding inferior para não ser coberto pela social bar */
-    padding-bottom: 80px; 
-  }
 }
 
 @media (max-width: 576px) { /* Mobile */
@@ -450,7 +447,7 @@ html {
 	  
 	  /* Ajuste para a Social Bar em telas menores que 576px */
 	  .social-bar {
-	    padding: 0.3rem 0;
+	    padding: 0.5rem 0;
 	  }
 	  
 	  .social-bar a {
