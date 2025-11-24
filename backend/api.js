@@ -61,6 +61,7 @@ app.get('/api/site-config', async (req, res) => {
       banner_images: [],
       company_email: "",
       company_address: "",
+      company_about_us: "",
       logo_width: "60px",
       logo_height: "60px"
     };

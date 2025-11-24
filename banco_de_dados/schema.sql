@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS site_config (
     phone TEXT,
     company_email TEXT,
     company_address TEXT,
+    company_about_us TEXT,
     whatsapp_link TEXT,
     instagram_link TEXT,
     facebook_link TEXT,
