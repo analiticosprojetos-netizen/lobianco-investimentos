@@ -1,1 +1,0 @@
-ALTER TABLE public.site_config ADD COLUMN IF NOT EXISTS company_about_us TEXT;
