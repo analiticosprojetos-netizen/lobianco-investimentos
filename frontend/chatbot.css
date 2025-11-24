@@ -1,7 +1,7 @@
 /* frontend/chatbot.css */
 
 :root {
-    --chat-primary: #0066CC; /* Cor principal do seu site */
+    --chat-primary: var(--azul); /* Cor principal do seu site, herdada do style.css */
     --chat-secondary: #f8f9fa; /* Cor de fundo */
     --chat-text: #333;
     --chat-bubble-user: #DCF8C6; /* Bolha do usuário (estilo WhatsApp) */
