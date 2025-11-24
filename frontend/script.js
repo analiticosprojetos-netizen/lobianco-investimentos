@@ -571,12 +571,105 @@ async function abrirGestao() {
     const imoveis = await apiCall('/imoveis');
     await preencherCamposConfiguracao();
 
-    const tipos = ['lancamento', 'na_planta', 'aluguel'];
-    tipos.forEach(tipo => {
-      const el = document.getElementById(`tab${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
-      if (!el) return;
+    const tipos = [
+      { key: 'lancamento', name: 'Lançamentos', tabId: 'tabLancamentos' },
+      { key: 'na_planta', name: 'Na Planta', tabId: 'tabPlanta' },
+      { key: 'aluguel', name: 'Aluguel', tabId: 'tabAluguel' }
+    ];
+
+    tipos.forEach(tipoInfo => {
+      const { key: tipo, name: tipoNome, tabId } = tipoInfo;
+      const el = document.getElementById(tabId);
+      if (!el) {
+        console.warn(`Elemento da aba #${tabId} não encontrado.`);
+        return;
+      }
+      
       const lista = (imoveis || []).filter(i => i.type === tipo);
-      el.innerHTML = `...`; // Conteúdo omitido para brevidade
+
+      el.innerHTML = `
+        <div class="p-3">
+            <h5 class="text-primary fw-bold mb-4">Adicionar Novo Imóvel (${tipoNome})</h5>
+            <div class="card bg-light border-0 mb-5">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Título *</label>
+                            <input type="text" class="form-control" id="tit_${tipo}" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Descrição</label>
+                            <textarea class="form-control" rows="3" id="desc_${tipo}" placeholder="Descreva o imóvel..."></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Preço</label>
+                            <input type="text" class="form-control" id="preco_${tipo}" placeholder="R$ 500.000,00">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Localização</label>
+                            <input type="text" class="form-control" id="loc_${tipo}" placeholder="Uberlândia - MG">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Quartos</label>
+                            <input type="number" class="form-control" id="quartos_${tipo}" placeholder="0" min="0">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Banheiros</label>
+                            <input type="number" class="form-control" id="banheiros_${tipo}" placeholder="0" min="0">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Área (m²)</label>
+                            <input type="text" class="form-control" id="area_${tipo}" placeholder="150">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Vagas</label>
+                            <input type="number" class="form-control" id="garagem_${tipo}" placeholder="0" min="0">
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="piscina_${tipo}">
+                                <label class="form-check-label fw-bold">Piscina</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Fotos do Imóvel</label>
+                            <input type="file" multiple class="form-control" id="fotos_${tipo}" accept="image/*">
+                            <div class="form-text">Selecione uma ou mais fotos (máx. 10MB cada)</div>
+                        </div>
+                        <div class="col-12 text-end">
+                            <button class="btn btn-primary px-4" onclick="salvarImovel('${tipo}')">
+                                <i class="fas fa-plus-circle"></i> Adicionar Imóvel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="text-primary fw-bold mb-4">Imóveis Cadastrados (${lista.length})</h5>
+            <div id="lista-imoveis-${tipo}">
+                ${lista.length > 0 ? lista.map(imovel => `
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                                <div class="d-flex align-items-center mb-2 mb-md-0">
+                                    <img src="${imovel.image_urls?.[0] || BANNER_PADRAO}" width="80" height="60" class="rounded me-3" style="object-fit: cover;" onerror="this.src='${BANNER_PADRAO}'">
+                                    <span class="fw-bold">${imovel.title}</span>
+                                </div>
+                                <div class="ms-md-auto">
+                                    <button class="btn btn-warning btn-sm me-2" onclick='editarImovel(${JSON.stringify(imovel).replace(/'/g, "&apos;")})'>
+                                        <i class="fas fa-edit"></i> Editar
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" onclick="excluirImovel('${imovel.id}')">
+                                        <i class="fas fa-trash"></i> Excluir
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('') : '<div class="alert alert-secondary">Nenhum imóvel cadastrado nesta categoria.</div>'}
+            </div>
+        </div>
+      `;
     });
 
     new bootstrap.Modal(document.getElementById('gestaoModal')).show();
